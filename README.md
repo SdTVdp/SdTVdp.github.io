@@ -2,6 +2,11 @@
 
 这个目录现在使用 Hexo + Butterfly 主题，并已经连到 `SdTVdp.github.io`。
 
+当前路由结构：
+
+- `/`：about 落地页
+- `/blog/`：博客主界面
+
 ## 目录说明
 
 - `source/_posts/`：后续维护 Markdown 文档的主目录

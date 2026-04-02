@@ -4,7 +4,8 @@ nav:
   fixed: false
 
 menu:
-  首页: / || fas fa-house
+  关于: / || fas fa-user
+  博客: /blog/ || fas fa-compass
   归档: /archives/ || fas fa-box-archive
   标签: /tags/ || fas fa-tags
   GitHub: https://github.com/SdTVdp || fab fa-github

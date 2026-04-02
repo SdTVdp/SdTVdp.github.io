@@ -66,7 +66,7 @@ hexo.extend.filter.register("before_generate", () => {
     const sticky = getStickyValue(post);
 
     if (sticky > 0 && !post.top) {
-      post.top = true;
+      post.top = sticky;
     }
   });
 });

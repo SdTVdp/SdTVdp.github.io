@@ -194,3 +194,129 @@ div#archive {
     width: 100%;
   }
 }
+
+.landing-hero {
+  display: grid;
+  gap: 24px;
+  padding: 8px 0 18px;
+}
+
+.landing-eyebrow {
+  margin: 0;
+  font-family: "Cascadia Code", "JetBrains Mono", "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--light-grey);
+}
+
+.landing-hero h1 {
+  margin: 0;
+  font-size: clamp(2.2rem, 5vw, 3.5rem);
+  line-height: 1.08;
+  letter-spacing: -0.04em;
+}
+
+.landing-summary {
+  margin: 0;
+  max-width: 760px;
+  font-size: 1.08rem;
+  line-height: 1.9;
+  color: var(--font-color);
+}
+
+.landing-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.landing-card {
+  padding: 20px 22px;
+  border: 1px solid rgba(23, 76, 128, 0.1);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.52);
+}
+
+[data-theme="dark"] .landing-card {
+  border-color: rgba(169, 216, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.landing-card h2 {
+  margin: 0 0 12px;
+  font-size: 1.08rem;
+}
+
+.landing-card ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.landing-card li + li {
+  margin-top: 0.45rem;
+}
+
+.landing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.landing-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 140px;
+  padding: 12px 18px;
+  border: 1px solid rgba(23, 76, 128, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.84);
+  color: var(--text-highlight-color);
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.landing-button:hover,
+.landing-button:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(18, 43, 78, 0.12);
+  outline: none;
+}
+
+.landing-button--primary {
+  border-color: transparent;
+  background: var(--btn-bg);
+  color: var(--btn-color);
+}
+
+[data-theme="dark"] .landing-button {
+  border-color: rgba(169, 216, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+[data-theme="dark"] .landing-button:hover,
+[data-theme="dark"] .landing-button:focus-visible {
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.22);
+}
+
+[data-theme="dark"] .landing-button--primary {
+  border-color: transparent;
+  background: #a9d8ff;
+  color: #0f1624;
+}
+
+@media screen and (max-width: 768px) {
+  .landing-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .landing-button {
+    width: 100%;
+  }
+}
