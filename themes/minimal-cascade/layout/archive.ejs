@@ -1,0 +1,24 @@
+﻿<%
+  let archiveTitle = '归档';
+
+  if (page.year && page.month) {
+    archiveTitle = `${page.year}-${String(page.month).padStart(2, '0')} 归档`;
+  } else if (page.year) {
+    archiveTitle = `${page.year} 年归档`;
+  }
+
+  const currentPosts = page.posts ? page.posts.toArray() : [];
+%>
+<%- partial('_partials/listing', {
+  posts: currentPosts,
+  heroEyebrow: 'Archive / Markdown / Hexo',
+  heroTitle: archiveTitle,
+  heroSummary: '归档页会在单列阅读流之外，额外提供月份时间轴和年份导航，方便回看历史内容。',
+  folderLabel: '文档目录：source/_posts/',
+  extraPartial: '_partials/archive-overview',
+  extraData: {
+    currentPosts,
+    allSitePosts: site.posts ? site.posts.toArray() : []
+  },
+  showPinnedSection: false
+}) %>

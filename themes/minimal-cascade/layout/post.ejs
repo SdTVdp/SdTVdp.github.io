@@ -1,0 +1,38 @@
+﻿<%
+  const plain = (value) => String(value || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  const tags = page.tags ? (typeof page.tags.toArray === 'function' ? page.tags.toArray() : page.tags) : [];
+%>
+<article class="doc">
+  <a class="doc__back" href="<%- url_for('/') %>">返回首页</a>
+
+  <header class="doc__header">
+    <p class="doc__eyebrow">Markdown 文档</p>
+    <h1><%= page.title %></h1>
+    <% if (page.excerpt) { %>
+      <p class="doc__summary"><%= plain(page.excerpt) %></p>
+    <% } %>
+    <div class="doc__meta">
+      <span><%= page.date ? page.date.format(config.date_format || 'YYYY-MM-DD') : '' %></span>
+      <span><%= page.source || page.path || '' %></span>
+    </div>
+    <% if (tags.length > 0) { %>
+      <div class="chip-row">
+        <% tags.forEach((tag) => { %>
+          <a class="chip chip--link chip--tag" style="<%- tag_style(tag.name) %>" href="<%- url_for(tag.path) %>">#<%= tag.name %></a>
+        <% }) %>
+      </div>
+    <% } %>
+  </header>
+
+  <div class="doc__layout">
+    <aside class="toc-panel" data-toc-panel hidden>
+      <p class="toc-panel__eyebrow">On this page</p>
+      <h2>文章目录</h2>
+      <nav class="toc-nav" data-toc aria-label="文章目录"></nav>
+    </aside>
+
+    <div class="doc__content prose" data-doc-content>
+      <%- page.content %>
+    </div>
+  </div>
+</article>

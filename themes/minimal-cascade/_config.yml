@@ -1,0 +1,9 @@
+brand_eyebrow: GitHub Pages / Hexo
+hero_title: 极简单列瀑布流主页
+hero_summary: 极简、可搜索、以 Markdown 为中心的知识花园。
+search_label: 搜索文档
+search_placeholder: 输入标题、标签或关键词
+search_hint: 搜索范围包括标题、摘要、标签和正文片段
+light_background: "#f6fbff"
+dark_background: "#1f1e33"
+background_image: /uploads/backgrounds/background-placeholder.svg

@@ -1,0 +1,38 @@
+﻿<%
+  const tags = site.tags ? site.tags.toArray().sort((left, right) => right.length - left.length || left.name.localeCompare(right.name)) : [];
+  const latestPost = site.posts && site.posts.length > 0 ? sorted_posts(site.posts)[0] : null;
+%>
+<section class="hero">
+  <p class="hero__eyebrow">Tags / Navigation / Hexo</p>
+  <h1>标签导航</h1>
+  <p class="hero__summary">这里把全站标签按内容数量重新排好，方便你从主题入口快速进入对应文章列表。</p>
+  <div class="chip-row">
+    <span class="chip">标签总数：<%= tags.length %></span>
+    <span class="chip">文章总数：<%= site.posts ? site.posts.length : 0 %></span>
+    <% if (latestPost) { %>
+      <a class="chip chip--link" href="<%- url_for(latestPost.path) %>">最近更新：<%= latestPost.title %></a>
+    <% } %>
+  </div>
+</section>
+
+<section class="panel panel--overview">
+  <div class="section-heading">
+    <p class="section-heading__eyebrow">Tag Map</p>
+    <h2>按主题进入内容</h2>
+    <p class="section-heading__summary">标签越靠前，说明收录内容越多。点击后会进入对应标签页，并继续保留全文搜索能力。</p>
+  </div>
+
+  <div class="tag-grid">
+    <% tags.forEach((tag) => { %>
+      <% const recentPost = sorted_posts(tag.posts)[0]; %>
+      <a class="tag-card tag-card--themed" style="<%- tag_style(tag.name) %>" href="<%- url_for(tag.path) %>">
+        <div class="tag-card__topline">
+          <span class="tag-card__name">#<%= tag.name %></span>
+          <span class="tag-card__count"><%= tag.length %> 篇</span>
+        </div>
+        <p class="tag-card__summary"><%= recentPost ? plain_text(recentPost.excerpt || recentPost.content).slice(0, 96) : '这个标签下还没有摘要内容。' %></p>
+        <span class="tag-card__recent"><%= recentPost ? `最近更新：${recentPost.date.format(config.date_format || 'YYYY-MM-DD')}` : '等待新文章' %></span>
+      </a>
+    <% }) %>
+  </div>
+</section>

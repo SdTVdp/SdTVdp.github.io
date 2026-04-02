@@ -1,0 +1,8 @@
+﻿<%- partial('_partials/listing', {
+  posts: page.posts ? page.posts.toArray() : [],
+  heroEyebrow: 'Single Column / Search / Markdown / Hexo',
+  heroTitle: theme.hero_title || '极简单列瀑布流主页',
+  heroSummary: theme.hero_summary || config.description,
+  folderLabel: '文档目录：source/_posts/',
+  showPinnedSection: true
+}) %>

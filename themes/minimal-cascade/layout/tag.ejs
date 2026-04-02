@@ -1,0 +1,22 @@
+﻿<%
+  const currentTag = typeof page.tag === 'string' ? page.tag : (page.tag?.name || '');
+  const currentPosts = sorted_posts(page.posts ? page.posts.toArray() : []);
+  const relatedTags = site.tags
+    ? site.tags.toArray().filter((tag) => tag.name !== currentTag).sort((left, right) => right.length - left.length).slice(0, 10)
+    : [];
+%>
+<%- partial('_partials/listing', {
+  posts: currentPosts,
+  heroEyebrow: 'Tag / Search / Markdown / Hexo',
+  heroTitle: `标签：${currentTag}`,
+  heroSummary: `当前标签下共 ${currentPosts.length} 篇文章，支持继续全文检索，并且会给你推荐其他高频标签。`,
+  folderLabel: '文档目录：source/_posts/',
+  extraPartial: '_partials/tag-overview',
+  extraData: {
+    currentTag,
+    currentPosts,
+    relatedTags,
+    allTagsCount: site.tags ? site.tags.length : 0
+  },
+  showPinnedSection: false
+}) %>

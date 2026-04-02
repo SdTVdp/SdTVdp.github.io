@@ -1,0 +1,27 @@
+﻿<%
+  const tags = post.tags ? (typeof post.tags.toArray === "function" ? post.tags.toArray() : post.tags) : [];
+  const summary = post_summary(post, 136);
+  const bodySnippet = plain_text(post.content || "").slice(0, 280);
+  const searchBlob = [post.title, summary, tags.map((tag) => tag.name).join(" "), bodySnippet].join(" ").toLowerCase();
+  const sticky = sticky_value(post);
+%>
+<article class="card js-card <%= sticky > 0 ? 'card--sticky' : '' %>" data-search="<%= searchBlob %>" data-sticky="<%= sticky %>">
+  <div class="card__meta">
+    <span><%= post.date ? post.date.format(config.date_format || "YYYY-MM-DD") : "" %></span>
+    <span><%= post.source || post.path || "" %></span>
+    <% if (sticky > 0) { %>
+      <span class="card__pin">置顶</span>
+    <% } %>
+  </div>
+  <h2 class="card__title">
+    <a href="<%- url_for(post.path) %>"><%= post.title %></a>
+  </h2>
+  <p class="card__summary"><%= summary %></p>
+  <% if (tags.length > 0) { %>
+    <div class="chip-row">
+      <% tags.forEach((tag) => { %>
+        <a class="chip chip--link chip--tag" style="<%- tag_style(tag.name) %>" href="<%- url_for(tag.path) %>">#<%= tag.name %></a>
+      <% }) %>
+    </div>
+  <% } %>
+</article>

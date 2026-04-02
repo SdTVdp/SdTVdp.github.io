@@ -1,0 +1,64 @@
+﻿title: Minimal Cascade
+subtitle: ""
+description: 极简、可搜索、专注 Markdown 更新的 Hexo 站点
+keywords:
+  - hexo
+  - markdown
+  - minimal
+author: ""
+language: zh-CN
+timezone: Asia/Shanghai
+
+url: https://sdtvdp.github.io
+root: /
+permalink: posts/:title/
+pretty_urls:
+  trailing_index: false
+  trailing_html: false
+
+source_dir: source
+public_dir: public
+tag_dir: tags
+archive_dir: archives
+code_dir: downloads/code
+i18n_dir: :lang
+
+new_post_name: :title.md
+default_layout: post
+titlecase: false
+external_link:
+  enable: true
+  field: site
+  exclude: []
+filename_case: 0
+render_drafts: false
+post_asset_folder: false
+relative_link: false
+future: true
+syntax_highlighter: prismjs
+prismjs:
+  preprocess: true
+  line_number: false
+  tab_replace: ""
+
+index_generator:
+  path: ""
+  per_page: 0
+  order_by: -date
+  pagination_dir: page
+
+per_page: 0
+pagination_dir: page
+theme: minimal-cascade
+
+theme_config:
+  brand_eyebrow: GitHub Pages / Hexo
+  hero_title: 极简单列瀑布流主页
+  hero_summary: 这个文件夹现在是 Hexo 站点根目录。把 Markdown 文档放进 source/_posts/，首页会自动收录，并支持标题、摘要、标签和正文片段搜索。
+  search_label: 搜索文档
+  search_placeholder: 输入标题、标签或关键词
+  search_hint: 搜索范围包括标题、摘要、标签和正文片段
+  light_background: "#f6fbff"
+  dark_background: "#1f1e33"
+  background_image: /uploads/backgrounds/background-placeholder.svg
+

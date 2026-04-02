@@ -1,0 +1,98 @@
+﻿<%
+  const items = sorted_posts(posts);
+  const heroEyebrowText = typeof heroEyebrow === "string" ? heroEyebrow : "Single Column / Search / Markdown / Hexo";
+  const heroTitleText = typeof heroTitle === "string" ? heroTitle : (theme.hero_title || "极简单列瀑布流主页");
+  const heroSummaryText = typeof heroSummary === "string" ? heroSummary : (theme.hero_summary || config.description);
+  const folderText = typeof folderLabel === "string" ? folderLabel : "文档目录：source/_posts/";
+  const currentBackground = theme.background_image || "/uploads/backgrounds/background-placeholder.svg";
+  const darkBackground = theme.dark_background || "#1f1e33";
+  const extraPartialName = typeof extraPartial === "string" ? extraPartial : "";
+  const extraPayload = typeof extraData !== "undefined" ? extraData : {};
+  const showPinned = showPinnedSection === true;
+  const pinnedItems = showPinned ? items.filter((post) => sticky_value(post) > 0) : [];
+  const regularItems = showPinned ? items.filter((post) => sticky_value(post) <= 0) : items;
+%>
+
+<section class="hero">
+  <p class="hero__eyebrow"><%= heroEyebrowText %></p>
+  <h1><%= heroTitleText %></h1>
+  <p class="hero__summary"><%= heroSummaryText %></p>
+  <div class="chip-row">
+    <span class="chip"><%= folderText %></span>
+    <a class="chip chip--link" href="<%- url_for('/tags/') %>">标签导航</a>
+    <a class="chip chip--link" href="<%- url_for('/archives/') %>">归档总览</a>
+    <span class="chip">背景图：<%= currentBackground %></span>
+    <span class="chip">深色背景：<%= darkBackground %></span>
+  </div>
+</section>
+
+<% if (extraPartialName) { %>
+  <%- partial(extraPartialName, extraPayload) %>
+<% } %>
+
+<section class="toolbar">
+  <label class="search-panel" for="site-search">
+    <span class="search-panel__label"><%= theme.search_label || "搜索文档" %></span>
+    <input
+      id="site-search"
+      class="search-input"
+      type="search"
+      placeholder="<%= theme.search_placeholder || '输入标题、标签或关键词' %>"
+      autocomplete="off"
+      data-search-input
+    >
+    <span class="search-panel__hint"><%= theme.search_hint || "搜索范围包括标题、摘要、标签和正文片段" %></span>
+  </label>
+  <div class="search-meta" data-search-meta>共 <%= items.length %> 篇文档</div>
+</section>
+
+<section class="search-results panel" data-search-results hidden>
+  <div class="section-heading">
+    <p class="section-heading__eyebrow">Local Search</p>
+    <h2 data-search-results-title>全文检索结果</h2>
+    <p class="section-heading__summary">这里会跨整站搜索标题、摘要、标签和正文内容，而不只是筛当前页面。</p>
+  </div>
+  <div class="cards" data-search-results-list></div>
+</section>
+
+<section class="listing-stack" data-default-results>
+  <% if (items.length > 0) { %>
+    <% if (pinnedItems.length > 0) { %>
+      <section class="cards-section">
+        <div class="cards-section__header">
+          <p class="section-heading__eyebrow">Pinned</p>
+          <h2>置顶文章</h2>
+          <p class="section-heading__summary">Front Matter 支持 <code>sticky: 数字</code>，数值越高越靠前，适合长期保留在首页顶部。</p>
+        </div>
+        <div class="cards">
+          <% pinnedItems.forEach((post) => { %>
+            <%- partial('_partials/post-card', { post }) %>
+          <% }) %>
+        </div>
+      </section>
+    <% } %>
+
+    <section class="cards-section">
+      <div class="cards-section__header">
+        <p class="section-heading__eyebrow"><%= pinnedItems.length > 0 ? 'Latest' : 'Flow' %></p>
+        <h2><%= pinnedItems.length > 0 ? '最新更新' : '全部文章' %></h2>
+        <p class="section-heading__summary"><%= pinnedItems.length > 0 ? '非置顶文章会继续按时间倒序排列，保持首页滚动阅读体验。' : '这里按照时间流展示所有文章，并支持标签和全文搜索。' %></p>
+      </div>
+      <div class="cards" data-card-list>
+        <% regularItems.forEach((post) => { %>
+          <%- partial('_partials/post-card', { post }) %>
+        <% }) %>
+      </div>
+    </section>
+  <% } else { %>
+    <article class="empty-state">
+      <h2>这里还没有文档</h2>
+      <p>把新的 Markdown 文件放进 <code>source/_posts/</code>，首页就会在这里显示它们。</p>
+    </article>
+  <% } %>
+</section>
+
+<article class="empty-state" data-search-empty hidden>
+  <h2>没有找到匹配内容</h2>
+  <p>可以试试标题关键词、标签，或者正文中的函数名、变量名与命令片段。</p>
+</article>

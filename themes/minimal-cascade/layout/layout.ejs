@@ -1,0 +1,42 @@
+﻿<%
+  const pageDescription = plain_text(page.excerpt || page.content || config.description).slice(0, 180);
+  const pageTitle = page.title ? `${page.title} | ${config.title}` : config.title;
+%>
+<!DOCTYPE html>
+<html lang="<%= config.language || "zh-CN" %>" data-theme="light">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="<%= pageDescription %>">
+    <meta name="theme-color" content="<%= theme.light_background || "#f6fbff" %>">
+    <title><%= pageTitle %></title>
+    <link rel="stylesheet" href="<%- url_for('/css/style.css') %>">
+    <script defer src="<%- url_for('/js/main.js') %>"></script>
+  </head>
+  <body
+    class="site-shell"
+    data-site-root="<%- url_for('/') %>"
+    style="--site-bg-image: url('<%- url_for(theme.background_image || '/uploads/backgrounds/background-placeholder.svg') %>'); --site-light-bg: <%= theme.light_background || '#f6fbff' %>; --site-dark-bg: <%= theme.dark_background || '#1f1e33' %>;"
+  >
+    <div class="page-wrap">
+      <header class="site-header">
+        <a class="site-brand" href="<%- url_for('/') %>">
+          <span class="site-brand__eyebrow"><%= theme.brand_eyebrow || "GitHub Pages / Hexo" %></span>
+          <span class="site-brand__title"><%= config.title %></span>
+        </a>
+        <button class="theme-toggle" type="button" data-theme-toggle aria-label="切换明暗主题">
+          <span data-theme-toggle-label>切换夜色</span>
+        </button>
+      </header>
+
+      <main class="page-main">
+        <%- body %>
+      </main>
+
+      <footer class="site-footer">
+        <span>Markdown 目录：<code>source/_posts/</code></span>
+        <span>背景图目录：<code>source/uploads/backgrounds/</code></span>
+      </footer>
+    </div>
+  </body>
+</html>

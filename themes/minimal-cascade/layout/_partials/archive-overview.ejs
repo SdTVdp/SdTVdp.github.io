@@ -1,0 +1,81 @@
+﻿<%
+  const posts = Array.isArray(currentPosts) ? currentPosts : [];
+  const allPosts = Array.isArray(allSitePosts) ? allSitePosts : [];
+  const latestPost = posts[0] || allPosts[0];
+  const uniqueYears = [...new Set(allPosts.map((post) => post.date ? post.date.format('YYYY') : '').filter(Boolean))];
+  const groups = [];
+
+  posts.forEach((post) => {
+    const key = post.date ? post.date.format('YYYY-MM') : 'unknown';
+    let bucket = groups.find((group) => group.key === key);
+
+    if (!bucket) {
+      bucket = {
+        key,
+        label: post.date ? post.date.format('YYYY 年 MM 月') : '未分类时间',
+        path: post.date ? `/archives/${post.date.format('YYYY/MM')}/` : '/archives/',
+        posts: []
+      };
+      groups.push(bucket);
+    }
+
+    bucket.posts.push(post);
+  });
+%>
+<section class="panel panel--overview">
+  <div class="section-heading">
+    <p class="section-heading__eyebrow">Archive Overview</p>
+    <h2>归档总览</h2>
+    <p class="section-heading__summary">这里把当前归档范围按时间轴展开，同时保留搜索和卡片视图，适合回看历史内容。</p>
+  </div>
+
+  <div class="info-grid">
+    <article class="stat-card">
+      <p class="stat-card__eyebrow">当前范围</p>
+      <p class="stat-card__value"><%= posts.length %></p>
+      <p class="stat-card__note">当前归档页内的文章数量</p>
+    </article>
+    <article class="stat-card">
+      <p class="stat-card__eyebrow">归档年份</p>
+      <p class="stat-card__value"><%= uniqueYears.length %></p>
+      <p class="stat-card__note">站点中已经覆盖的年份数量</p>
+    </article>
+    <article class="stat-card">
+      <p class="stat-card__eyebrow">最近更新</p>
+      <p class="stat-card__value stat-card__value--small"><%= latestPost ? latestPost.date.format(config.date_format || 'YYYY-MM-DD') : '暂无' %></p>
+      <p class="stat-card__note"><%= latestPost ? latestPost.title : '还没有历史内容' %></p>
+    </article>
+  </div>
+
+  <% if (uniqueYears.length > 0) { %>
+    <div class="chip-row chip-row--wide">
+      <% uniqueYears.forEach((year) => { %>
+        <a class="chip chip--link" href="<%- url_for(`/archives/${year}/`) %>"><%= year %> 年</a>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <% if (groups.length > 0) { %>
+    <div class="timeline">
+      <% groups.forEach((group) => { %>
+        <section class="timeline-group">
+          <div class="timeline-group__header">
+            <h3><a href="<%- url_for(group.path) %>"><%= group.label %></a></h3>
+            <span><%= group.posts.length %> 篇</span>
+          </div>
+          <ol class="timeline-list">
+            <% group.posts.slice(0, 6).forEach((post) => { %>
+              <li class="timeline-item">
+                <span class="timeline-item__date"><%= post.date ? post.date.format('MM-DD') : '--' %></span>
+                <a class="timeline-item__title" href="<%- url_for(post.path) %>"><%= post.title %></a>
+                <% if (sticky_value(post) > 0) { %>
+                  <span class="card__pin">置顶</span>
+                <% } %>
+              </li>
+            <% }) %>
+          </ol>
+        </section>
+      <% }) %>
+    </div>
+  <% } %>
+</section>

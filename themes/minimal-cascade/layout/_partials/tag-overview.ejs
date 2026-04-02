@@ -1,0 +1,37 @@
+﻿<%
+  const posts = Array.isArray(currentPosts) ? currentPosts : [];
+  const related = Array.isArray(relatedTags) ? relatedTags : [];
+  const latestPost = posts[0];
+%>
+<section class="panel panel--overview">
+  <div class="section-heading">
+    <p class="section-heading__eyebrow">Tag Overview</p>
+    <h2>#<%= currentTag %></h2>
+    <p class="section-heading__summary">当前标签下的内容会继续支持全文检索，同时这里会帮你快速跳转到其他标签。</p>
+  </div>
+
+  <div class="info-grid">
+    <article class="stat-card">
+      <p class="stat-card__eyebrow">当前文章</p>
+      <p class="stat-card__value"><%= posts.length %></p>
+      <p class="stat-card__note">这一标签下已收录的文档数量</p>
+    </article>
+    <article class="stat-card">
+      <p class="stat-card__eyebrow">全部标签</p>
+      <p class="stat-card__value"><%= allTagsCount %></p>
+      <p class="stat-card__note">站点中当前可用的标签总数</p>
+    </article>
+    <article class="stat-card">
+      <p class="stat-card__eyebrow">最近更新</p>
+      <p class="stat-card__value stat-card__value--small"><%= latestPost ? latestPost.date.format(config.date_format || 'YYYY-MM-DD') : '暂无' %></p>
+      <p class="stat-card__note"><%= latestPost ? latestPost.title : '这个标签下还没有文章' %></p>
+    </article>
+  </div>
+
+  <div class="chip-row chip-row--wide">
+    <a class="chip chip--link" href="<%- url_for('/tags/') %>">全部标签</a>
+    <% related.forEach((tag) => { %>
+      <a class="chip chip--link chip--tag" style="<%- tag_style(tag.name) %>" href="<%- url_for(tag.path) %>">#<%= tag.name %> · <%= tag.length %></a>
+    <% }) %>
+  </div>
+</section>
