@@ -195,13 +195,118 @@ div#archive {
   }
 }
 
-.landing-hero {
+.landing-shell {
   display: grid;
-  gap: 24px;
-  padding: 8px 0 18px;
+  gap: 28px;
+  padding: 10px 0 24px;
 }
 
-.landing-eyebrow {
+.landing-hero {
+  display: grid;
+  gap: 20px;
+}
+
+.landing-profile,
+.landing-status-grid,
+.landing-grid {
+  display: grid;
+  gap: 18px;
+}
+
+.landing-profile {
+  grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
+  align-items: stretch;
+}
+
+.landing-status-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.landing-grid--feature {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.landing-grid--detail {
+  grid-template-columns: 1.1fr 0.9fr;
+}
+
+.landing-panel,
+.landing-card,
+.landing-avatar-wrap {
+  border: 1px solid rgba(23, 76, 128, 0.1);
+  border-radius: 26px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.62)),
+    rgba(255, 255, 255, 0.72);
+  box-shadow: 0 20px 42px rgba(18, 43, 78, 0.1);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+[data-theme="dark"] .landing-panel,
+[data-theme="dark"] .landing-card,
+[data-theme="dark"] .landing-avatar-wrap {
+  border-color: rgba(169, 216, 255, 0.1);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02)),
+    rgba(255, 255, 255, 0.03);
+  box-shadow: 0 22px 48px rgba(0, 0, 0, 0.22);
+}
+
+.landing-avatar-wrap,
+.landing-panel,
+.landing-card {
+  padding: 24px;
+}
+
+.landing-avatar-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.landing-avatar-wrap::before {
+  content: "";
+  position: absolute;
+  inset: auto -12% -18% auto;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(23, 76, 128, 0.15), rgba(23, 76, 128, 0));
+  pointer-events: none;
+}
+
+[data-theme="dark"] .landing-avatar-wrap::before {
+  background: radial-gradient(circle, rgba(169, 216, 255, 0.18), rgba(169, 216, 255, 0));
+}
+
+.landing-avatar {
+  width: min(100%, 188px);
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 6px solid rgba(255, 255, 255, 0.72);
+  box-shadow: 0 18px 42px rgba(18, 43, 78, 0.16);
+}
+
+[data-theme="dark"] .landing-avatar {
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.28);
+}
+
+.landing-intro {
+  display: grid;
+  gap: 16px;
+  align-content: center;
+  padding: 12px 4px;
+}
+
+.landing-eyebrow,
+.landing-panel-label,
+.landing-card-kicker {
   margin: 0;
   font-family: "Cascadia Code", "JetBrains Mono", "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
   font-size: 0.82rem;
@@ -212,55 +317,88 @@ div#archive {
 
 .landing-hero h1 {
   margin: 0;
-  font-size: clamp(2.2rem, 5vw, 3.5rem);
-  line-height: 1.08;
-  letter-spacing: -0.04em;
+  font-size: clamp(2.4rem, 5vw, 4rem);
+  line-height: 1.05;
+  letter-spacing: -0.045em;
 }
 
-.landing-summary {
+.landing-summary,
+.landing-panel p,
+.landing-card p,
+.landing-contact-value {
   margin: 0;
-  max-width: 760px;
-  font-size: 1.08rem;
   line-height: 1.9;
   color: var(--font-color);
 }
 
-.landing-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
-}
-
-.landing-card {
-  padding: 20px 22px;
-  border: 1px solid rgba(23, 76, 128, 0.1);
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.52);
-}
-
-[data-theme="dark"] .landing-card {
-  border-color: rgba(169, 216, 255, 0.1);
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.landing-card h2 {
-  margin: 0 0 12px;
+.landing-summary {
+  max-width: 760px;
   font-size: 1.08rem;
 }
 
-.landing-card ul {
+.landing-panel h2,
+.landing-section-heading h2,
+.landing-card h3 {
+  margin: 0;
+  letter-spacing: -0.03em;
+}
+
+.landing-panel h2,
+.landing-section-heading h2 {
+  font-size: clamp(1.4rem, 3vw, 2rem);
+}
+
+.landing-card h3 {
+  font-size: 1.18rem;
+}
+
+.landing-section {
+  display: grid;
+  gap: 16px;
+}
+
+.landing-section-heading {
+  display: grid;
+  gap: 8px;
+}
+
+.landing-chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.landing-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid rgba(23, 76, 128, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--text-highlight-color);
+  font-size: 0.96rem;
+}
+
+[data-theme="dark"] .landing-chip {
+  border-color: rgba(169, 216, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.landing-list {
   margin: 0;
   padding-left: 1.2rem;
 }
 
-.landing-card li + li {
-  margin-top: 0.45rem;
+.landing-list li + li {
+  margin-top: 0.55rem;
 }
 
 .landing-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+  padding-top: 4px;
 }
 
 .landing-button {
@@ -268,20 +406,29 @@ div#archive {
   align-items: center;
   justify-content: center;
   min-width: 140px;
+  min-height: 48px;
   padding: 12px 18px;
   border: 1px solid rgba(23, 76, 128, 0.12);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.84);
+  background: rgba(255, 255, 255, 0.86);
   color: var(--text-highlight-color);
   text-decoration: none;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .landing-button:hover,
-.landing-button:focus-visible {
+.landing-button:focus-visible,
+.landing-inline-link:hover,
+.landing-inline-link:focus-visible,
+.landing-contact:hover,
+.landing-contact:focus-visible {
   transform: translateY(-1px);
-  box-shadow: 0 12px 24px rgba(18, 43, 78, 0.12);
   outline: none;
+}
+
+.landing-button:hover,
+.landing-button:focus-visible {
+  box-shadow: 0 12px 24px rgba(18, 43, 78, 0.12);
 }
 
 .landing-button--primary {
@@ -290,13 +437,79 @@ div#archive {
   color: var(--btn-color);
 }
 
+.landing-inline-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  color: var(--text-highlight-color);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.landing-inline-link::after {
+  content: "->";
+  font-family: "Cascadia Code", "JetBrains Mono", "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  font-size: 0.9rem;
+}
+
+.landing-card--feature {
+  position: relative;
+  overflow: hidden;
+}
+
+.landing-card--feature::before {
+  content: "";
+  position: absolute;
+  inset: auto -32px -52px auto;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(116, 173, 236, 0.18), rgba(116, 173, 236, 0));
+  pointer-events: none;
+}
+
+[data-theme="dark"] .landing-card--feature::before {
+  background: radial-gradient(circle, rgba(169, 216, 255, 0.12), rgba(169, 216, 255, 0));
+}
+
+.landing-contact-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.landing-contact {
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid rgba(23, 76, 128, 0.1);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.68);
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+[data-theme="dark"] .landing-contact {
+  border-color: rgba(169, 216, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.landing-contact:hover,
+.landing-contact:focus-visible {
+  box-shadow: 0 12px 24px rgba(18, 43, 78, 0.12);
+}
+
 [data-theme="dark"] .landing-button {
   border-color: rgba(169, 216, 255, 0.14);
   background: rgba(255, 255, 255, 0.04);
 }
 
 [data-theme="dark"] .landing-button:hover,
-[data-theme="dark"] .landing-button:focus-visible {
+[data-theme="dark"] .landing-button:focus-visible,
+[data-theme="dark"] .landing-contact:hover,
+[data-theme="dark"] .landing-contact:focus-visible {
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.22);
 }
 
@@ -306,9 +519,22 @@ div#archive {
   color: #0f1624;
 }
 
-@media screen and (max-width: 768px) {
-  .landing-grid {
+@media screen and (max-width: 900px) {
+  .landing-profile,
+  .landing-status-grid,
+  .landing-grid--feature,
+  .landing-grid--detail {
     grid-template-columns: 1fr;
+  }
+
+  .landing-avatar-wrap {
+    min-height: 240px;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .landing-shell {
+    gap: 22px;
   }
 
   .landing-actions {
@@ -318,5 +544,11 @@ div#archive {
 
   .landing-button {
     width: 100%;
+  }
+
+  .landing-avatar-wrap,
+  .landing-panel,
+  .landing-card {
+    padding: 20px;
   }
 }

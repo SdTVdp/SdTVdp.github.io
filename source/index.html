@@ -8,31 +8,125 @@ comments: false
 toc: false
 ---
 
-<div class="landing-hero">
-  <p class="landing-eyebrow">About / Entry / Markdown Garden</p>
-  <h1>你好，我是 SdTVdp。</h1>
-  <p class="landing-summary">这里是我的个人入口页。内容会围绕 Markdown 笔记、代码片段、项目记录和长期维护的文档展开。</p>
-  <div class="landing-grid">
-    <section class="landing-card">
-      <h2>我会在这里写什么</h2>
-      <ul>
-        <li>技术笔记与备忘</li>
-        <li>代码片段与实验记录</li>
-        <li>适合长期沉淀的文档</li>
+<div class="landing-shell">
+  <section class="landing-hero">
+    <div class="landing-profile">
+      <div class="landing-avatar-wrap">
+        <img
+          class="landing-avatar"
+          src="https://avatars.githubusercontent.com/u/186720289?v=4"
+          alt="SdTVdp avatar"
+        >
+      </div>
+      <div class="landing-intro">
+        <p class="landing-eyebrow">About / Entry / Markdown Garden</p>
+        <h1>你好，我是 SdTVdp。</h1>
+        <p class="landing-summary">
+          这里是我的个人主页。这个站点会持续沉淀 Markdown 笔记、代码片段、项目记录和长期维护的文档，
+          并保持简洁、可搜索、适合长期阅读。
+        </p>
+        <div class="landing-actions">
+          <a class="landing-button landing-button--primary" href="/blog/">进入博客</a>
+          <a class="landing-button" href="/archives/">查看归档</a>
+          <a class="landing-button" href="/tags/">浏览标签</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="landing-status-grid">
+      <article class="landing-panel">
+        <p class="landing-panel-label">站点定位</p>
+        <h2>一个长期维护的知识型博客</h2>
+        <p>
+          根首页负责展示我是谁，以及内容方向；真正的写作与检索入口保留在
+          <code>/blog/</code>，方便以后继续扩展为更完整的文档站。
+        </p>
+      </article>
+      <article class="landing-panel">
+        <p class="landing-panel-label">当前关注</p>
+        <ul class="landing-list">
+          <li>Markdown 工作流与知识整理</li>
+          <li>Hexo / GitHub Pages / 前端样式实验</li>
+          <li>面向长期沉淀的写作结构</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <section class="landing-section">
+    <div class="landing-section-heading">
+      <p class="landing-eyebrow">Focus / Stack</p>
+      <h2>我会在这里持续记录什么</h2>
+    </div>
+    <div class="landing-chip-group">
+      <span class="landing-chip">Markdown Notes</span>
+      <span class="landing-chip">Code Snippets</span>
+      <span class="landing-chip">Project Logs</span>
+      <span class="landing-chip">Hexo</span>
+      <span class="landing-chip">GitHub Pages</span>
+      <span class="landing-chip">Long-form Docs</span>
+      <span class="landing-chip">CSS / UI Tuning</span>
+      <span class="landing-chip">Knowledge Base</span>
+    </div>
+  </section>
+
+  <section class="landing-section">
+    <div class="landing-section-heading">
+      <p class="landing-eyebrow">Highlights / Entry Points</p>
+      <h2>从这里进入你想看的内容</h2>
+    </div>
+    <div class="landing-grid landing-grid--feature">
+      <article class="landing-card landing-card--feature">
+        <p class="landing-card-kicker">Primary</p>
+        <h3>博客主界面</h3>
+        <p>查看置顶文章、最新内容、本地搜索和当前文章流。</p>
+        <a class="landing-inline-link" href="/blog/">打开 /blog/</a>
+      </article>
+      <article class="landing-card landing-card--feature">
+        <p class="landing-card-kicker">Explore</p>
+        <h3>标签导航</h3>
+        <p>按主题快速浏览内容，适合找某个知识点或系列文章。</p>
+        <a class="landing-inline-link" href="/tags/">浏览标签</a>
+      </article>
+      <article class="landing-card landing-card--feature">
+        <p class="landing-card-kicker">Timeline</p>
+        <h3>归档时间轴</h3>
+        <p>按年份和月份回看站点内容的演进过程。</p>
+        <a class="landing-inline-link" href="/archives/">进入归档</a>
+      </article>
+      <article class="landing-card landing-card--feature">
+        <p class="landing-card-kicker">Outside</p>
+        <h3>GitHub</h3>
+        <p>查看仓库、提交历史和这个站点的源码结构。</p>
+        <a class="landing-inline-link" href="https://github.com/SdTVdp" target="_blank" rel="noopener">打开 GitHub</a>
+      </article>
+    </div>
+  </section>
+
+  <section class="landing-grid landing-grid--detail">
+    <article class="landing-card">
+      <p class="landing-panel-label">写作方式</p>
+      <h3>保持简单，但支持长期增长</h3>
+      <ul class="landing-list">
+        <li>Markdown 主目录在 <code>source/_posts/</code></li>
+        <li>背景图资源放在 <code>source/uploads/backgrounds/</code></li>
+        <li>保留深浅色切换、本地全文搜索与代码高亮</li>
       </ul>
-    </section>
-    <section class="landing-card">
-      <h2>站点结构</h2>
-      <ul>
-        <li>根首页是 about 落地页</li>
-        <li>博客主界面在 <code>/blog/</code></li>
-        <li>Markdown 主目录是 <code>source/_posts/</code></li>
-      </ul>
-    </section>
-  </div>
-  <div class="landing-actions">
-    <a class="landing-button landing-button--primary" href="/blog/">进入博客</a>
-    <a class="landing-button" href="/tags/">查看标签</a>
-    <a class="landing-button" href="https://github.com/SdTVdp" target="_blank" rel="noopener">GitHub</a>
-  </div>
+    </article>
+
+    <article class="landing-card">
+      <p class="landing-panel-label">联系我</p>
+      <h3>欢迎通过这些入口找到我</h3>
+      <div class="landing-contact-list">
+        <a class="landing-contact" href="https://github.com/SdTVdp" target="_blank" rel="noopener">
+          <span class="landing-contact-label">GitHub</span>
+          <span class="landing-contact-value">@SdTVdp</span>
+        </a>
+        <a class="landing-contact" href="mailto:2622269374@qq.com">
+          <span class="landing-contact-label">Email</span>
+          <span class="landing-contact-value">2622269374@qq.com</span>
+        </a>
+      </div>
+    </article>
+  </section>
 </div>
