@@ -8,7 +8,7 @@ tags:
   - local
 ---
 
-现在的搜索已经不是只过滤首页已有卡片，而是会读取本地生成的 `search-index.json`，在浏览器里完成全文匹配。
+现在的搜索已经不是只过滤首页已有卡片，而是会读取本地生成的 `search.json`，在浏览器里完成全文匹配。
 
 ## 这意味着什么
 
@@ -23,4 +23,4 @@ tags:
 - sticky
 - 归档时间轴
 - 标签导航
-- search-index.json
+- search.json

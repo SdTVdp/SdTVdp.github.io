@@ -1,11 +1,11 @@
-﻿title: Minimal Cascade
+title: Minimal Cascade
 subtitle: ""
 description: 极简、可搜索、专注 Markdown 更新的 Hexo 站点
 keywords:
   - hexo
   - markdown
-  - minimal
-author: ""
+  - butterfly
+author: SdTVdp
 language: zh-CN
 timezone: Asia/Shanghai
 
@@ -20,6 +20,7 @@ source_dir: source
 public_dir: public
 tag_dir: tags
 archive_dir: archives
+category_dir: categories
 code_dir: downloads/code
 i18n_dir: :lang
 
@@ -35,6 +36,7 @@ render_drafts: false
 post_asset_folder: false
 relative_link: false
 future: true
+
 syntax_highlighter: prismjs
 prismjs:
   preprocess: true
@@ -49,16 +51,10 @@ index_generator:
 
 per_page: 0
 pagination_dir: page
-theme: minimal-cascade
+theme: butterfly
 
-theme_config:
-  brand_eyebrow: GitHub Pages / Hexo
-  hero_title: 极简单列瀑布流主页
-  hero_summary: 这个文件夹现在是 Hexo 站点根目录。把 Markdown 文档放进 source/_posts/，首页会自动收录，并支持标题、摘要、标签和正文片段搜索。
-  search_label: 搜索文档
-  search_placeholder: 输入标题、标签或关键词
-  search_hint: 搜索范围包括标题、摘要、标签和正文片段
-  light_background: "#f6fbff"
-  dark_background: "#1f1e33"
-  background_image: /uploads/backgrounds/background-placeholder.svg
-
+search:
+  path: search.json
+  field: post
+  content: true
+  format: striptags

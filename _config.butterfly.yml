@@ -1,0 +1,209 @@
+nav:
+  display_title: true
+  display_post_title: true
+  fixed: false
+
+menu:
+  首页: / || fas fa-house
+  归档: /archives/ || fas fa-box-archive
+  标签: /tags/ || fas fa-tags
+  GitHub: https://github.com/SdTVdp || fab fa-github
+
+code_blocks:
+  theme: light
+  macStyle: false
+  height_limit: false
+  word_wrap: false
+  copy: true
+  language: true
+  shrink: false
+  fullpage: true
+
+social:
+  fab fa-github: https://github.com/SdTVdp || GitHub || "#24292e"
+  fas fa-envelope: mailto:2622269374@qq.com || Email || "#4a7dbe"
+
+favicon: https://avatars.githubusercontent.com/u/186720289?v=4
+
+avatar:
+  img: https://avatars.githubusercontent.com/u/186720289?v=4
+  effect: false
+
+disable_top_img: false
+default_top_img: /uploads/backgrounds/background-placeholder.svg
+index_img: /uploads/backgrounds/background-placeholder.svg
+archive_img: /uploads/backgrounds/background-placeholder.svg
+tag_img: /uploads/backgrounds/background-placeholder.svg
+footer_img: false
+background:
+  - "#f6fbff"
+
+cover:
+  index_enable: true
+  aside_enable: false
+  archives_enable: true
+  default_cover:
+    - /uploads/backgrounds/background-placeholder.svg
+
+post_meta:
+  page:
+    date_type: created
+    date_format: date
+    categories: false
+    tags: true
+    label: true
+  post:
+    position: left
+    date_type: both
+    date_format: date
+    categories: false
+    tags: true
+    label: true
+
+index_site_info_top: 42%
+index_top_img_height: 54vh
+
+subtitle:
+  enable: true
+  effect: false
+  sub:
+    - 专注 Markdown 笔记与长期文档
+    - GitHub Pages / Hexo / Butterfly
+
+index_layout: 3
+
+index_post_content:
+  method: 2
+  length: 180
+
+toc:
+  post: true
+  page: false
+  number: true
+  expand: false
+  style_simple: false
+  scroll_percent: true
+
+post_copyright:
+  enable: false
+
+related_post:
+  enable: true
+  limit: 6
+  date_type: created
+
+post_pagination: 1
+
+footer:
+  nav:
+  owner:
+    enable: true
+    since: 2026
+  copyright:
+    enable: true
+    version: true
+  custom_text: "<span>Markdown 目录：<code>source/_posts/</code></span>"
+
+aside:
+  enable: true
+  hide: false
+  button: true
+  mobile: true
+  position: right
+  display:
+    archive: true
+    tag: true
+    category: false
+  card_author:
+    enable: true
+    description: 记录 Markdown 笔记、代码片段和长期文档。
+    button:
+      enable: true
+      icon: fab fa-github
+      text: GitHub
+      link: https://github.com/SdTVdp
+  card_announcement:
+    enable: true
+    content: 文档统一维护在 <code>source/_posts/</code>，背景图放在 <code>source/uploads/backgrounds/</code>。
+  card_recent_post:
+    enable: true
+    limit: 5
+    sort: date
+  card_newest_comments:
+    enable: false
+  card_categories:
+    enable: false
+  card_tags:
+    enable: true
+    limit: 30
+    color: true
+    orderby: length
+    order: -1
+  card_archives:
+    enable: true
+    type: monthly
+    format: YYYY年MM月
+    order: -1
+    limit: 12
+  card_post_series:
+    enable: false
+  card_webinfo:
+    enable: true
+    post_count: true
+    last_push_date: true
+
+readmode: true
+
+darkmode:
+  enable: true
+  button: true
+  autoChangeMode: false
+
+rightside_scroll_percent: true
+
+search:
+  use: local_search
+  placeholder: 搜索标题、标签或正文
+  local_search:
+    preload: false
+    top_n_per_article: 2
+    unescape: false
+    pagination:
+      enable: true
+      hitsPerPage: 8
+
+share:
+  use:
+
+comments:
+  use:
+
+theme_color:
+  enable: true
+  main: "#174c80"
+  paginator: "#2d6ca8"
+  button_hover: "#143c67"
+  text_selection: "#b9d9ff"
+  link_color: "#607894"
+  meta_color: "#6f7f92"
+  hr_color: "#b8d5f3"
+  code_foreground: "#0f4f8a"
+  code_background: "rgba(23, 76, 128, .06)"
+  toc_color: "#174c80"
+  blockquote_padding_color: "#79aee6"
+  blockquote_background_color: "#dcecff"
+  scrollbar_color: "#7da8d7"
+  meta_theme_color_light: "#f6fbff"
+  meta_theme_color_dark: "#1f1e33"
+
+display_mode: light
+
+font:
+  global_font_size: 17px
+  code_font_size: 15px
+  font_family: "'Aptos', 'Segoe UI Variable Text', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif"
+  code_font_family: "'Cascadia Code', 'JetBrains Mono', 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace"
+
+inject:
+  head:
+    - <link rel="stylesheet" href="/css/custom.css">

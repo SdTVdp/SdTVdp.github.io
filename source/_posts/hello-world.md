@@ -14,7 +14,7 @@ tags:
 ## 你可以怎么扩展
 
 1. 持续在 `source/_posts/` 目录里写新的笔记或文章
-2. 把背景图放进 `source/uploads/backgrounds/`，然后修改根目录 `_config.yml` 里的 `theme_config.background_image`
+2. 把背景图放进 `source/uploads/backgrounds/`，然后修改根目录 `_config.butterfly.yml` 里的 `default_top_img`、`index_img` 或其他页面头图配置
 3. 如果仓库名不是 `username.github.io`，记得把根目录 `_config.yml` 里的 `url` 和 `root` 改成你的项目路径
 4. 如果希望文章长期固定在首页顶部，可以在 Front Matter 里写 `sticky: 10`
 

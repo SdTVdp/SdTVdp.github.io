@@ -59,6 +59,18 @@ const hashText = (value) => {
 const getTagHue = (tagName) => 18 + (hashText(String(tagName || "").trim().toLowerCase() || "tag") % 320);
 const buildTagStyle = (tagName) => `--tag-hue:${getTagHue(tagName)};`;
 
+hexo.extend.filter.register("before_generate", () => {
+  const posts = asArray(hexo.locals.get("posts"));
+
+  posts.forEach((post) => {
+    const sticky = getStickyValue(post);
+
+    if (sticky > 0 && !post.top) {
+      post.top = true;
+    }
+  });
+});
+
 hexo.extend.helper.register("plain_text", (value) => htmlToText(value));
 hexo.extend.helper.register("sticky_value", (post) => getStickyValue(post));
 hexo.extend.helper.register("sorted_posts", (posts) => sortPosts(posts));
