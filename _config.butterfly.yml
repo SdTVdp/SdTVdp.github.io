@@ -31,10 +31,10 @@ avatar:
   effect: false
 
 disable_top_img: false
-default_top_img: /uploads/backgrounds/background-placeholder.svg
-index_img: /uploads/backgrounds/background-placeholder.svg
-archive_img: /uploads/backgrounds/background-placeholder.svg
-tag_img: /uploads/backgrounds/background-placeholder.svg
+default_top_img: /uploads/backgrounds/background1.jpg
+index_img: /uploads/backgrounds/background1.jpg
+archive_img: /uploads/backgrounds/background1.jpg
+tag_img: /uploads/backgrounds/background1.jpg
 footer_img: false
 background:
   - "#f6fbff"
@@ -50,14 +50,14 @@ post_meta:
   page:
     date_type: created
     date_format: date
-    categories: false
+    categories: true
     tags: true
     label: true
   post:
     position: left
     date_type: both
     date_format: date
-    categories: false
+    categories: true
     tags: true
     label: true
 
@@ -114,7 +114,7 @@ aside:
   display:
     archive: true
     tag: true
-    category: false
+    category: true
   card_author:
     enable: true
     description: 记录 Markdown 笔记、代码片段和长期文档。
@@ -125,7 +125,7 @@ aside:
       link: https://github.com/SdTVdp
   card_announcement:
     enable: true
-    content: 文档统一维护在 <code>source/_posts/</code>，背景图放在 <code>source/uploads/backgrounds/</code>。
+    content: 文档统一维护在 <code>source/_posts/&lt;section&gt;/&lt;topic&gt;/article.md</code>，背景图放在 <code>source/uploads/backgrounds/</code>。
   card_recent_post:
     enable: true
     limit: 5
@@ -133,7 +133,7 @@ aside:
   card_newest_comments:
     enable: false
   card_categories:
-    enable: false
+    enable: true
   card_tags:
     enable: true
     limit: 30

@@ -1,0 +1,9 @@
+extends ../node_modules/hexo-theme-butterfly/layout/includes/layout.pug
+
+block content
+  #page
+    if top_img === false && page.title
+      .page-title= page.title
+
+    .category-lists
+      !=list_categories()

@@ -1,0 +1,17 @@
+extends ../node_modules/hexo-theme-butterfly/layout/includes/layout.pug
+
+block content
+  #page
+    if top_img === false && page.title
+      .page-title= page.title
+
+    .tag-cloud-list.text-center
+      !=cloudTags({
+        source: site.tags,
+        orderby: 'random',
+        order: 1,
+        minfontsize: 1.2,
+        maxfontsize: 1.5,
+        limit: 0,
+        unit: 'em'
+      })
