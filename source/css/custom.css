@@ -189,6 +189,53 @@ div#archive {
   width: calc(100% - 318px);
 }
 
+.click-halo {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: var(--halo-size, 148px);
+  height: var(--halo-size, 148px);
+  margin-left: calc(var(--halo-size, 148px) * -0.5);
+  margin-top: calc(var(--halo-size, 148px) * -0.5);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0;
+  background:
+    radial-gradient(circle, rgba(var(--halo-rgb, 23, 76, 128), 0.24) 0, rgba(var(--halo-rgb, 23, 76, 128), 0.16) 26%, rgba(var(--halo-rgb, 23, 76, 128), 0.04) 55%, rgba(var(--halo-rgb, 23, 76, 128), 0) 74%);
+  box-shadow:
+    0 0 0 1px rgba(var(--halo-rgb, 23, 76, 128), 0.26),
+    0 0 24px rgba(var(--halo-rgb, 23, 76, 128), 0.16);
+  mix-blend-mode: screen;
+  animation: click-halo-burst 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+[data-theme="dark"] .click-halo {
+  mix-blend-mode: lighten;
+}
+
+@keyframes click-halo-burst {
+  0% {
+    opacity: 0;
+    transform: translate3d(var(--halo-x, 0), var(--halo-y, 0), 0) scale(0.2);
+  }
+
+  18% {
+    opacity: 0.92;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--halo-x, 0), var(--halo-y, 0), 0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .click-halo {
+    display: none;
+  }
+}
+
 @media screen and (max-width: 900px) {
   .layout > div:first-child:not(.recent-posts) {
     width: 100%;
@@ -458,6 +505,26 @@ div#archive {
   overflow: hidden;
 }
 
+.landing-card--about {
+  position: relative;
+  overflow: hidden;
+}
+
+.landing-card--about::after {
+  content: "";
+  position: absolute;
+  inset: auto 28px 24px auto;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(23, 76, 128, 0.14), rgba(23, 76, 128, 0));
+  pointer-events: none;
+}
+
+[data-theme="dark"] .landing-card--about::after {
+  background: radial-gradient(circle, rgba(169, 216, 255, 0.16), rgba(169, 216, 255, 0));
+}
+
 .landing-card--feature::before {
   content: "";
   position: absolute;
@@ -552,3 +619,4 @@ div#archive {
     padding: 20px;
   }
 }
+

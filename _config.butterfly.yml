@@ -4,7 +4,8 @@ nav:
   fixed: false
 
 menu:
-  关于: / || fas fa-user
+  首页: / || fas fa-house
+  自我介绍: /about/ || fas fa-user
   博客: /blog/ || fas fa-compass
   归档: /archives/ || fas fa-box-archive
   标签: /tags/ || fas fa-tags
@@ -22,7 +23,7 @@ code_blocks:
 
 social:
   fab fa-github: https://github.com/SdTVdp || GitHub || "#24292e"
-  fas fa-envelope: mailto:2622269374@qq.com || Email || "#4a7dbe"
+  fas fa-envelope: mailto:daofansi63697jlv@163.com || Email || "#4a7dbe"
 
 favicon: https://avatars.githubusercontent.com/u/186720289?v=4
 
@@ -125,7 +126,7 @@ aside:
       link: https://github.com/SdTVdp
   card_announcement:
     enable: true
-    content: 文档统一维护在 <code>source/_posts/&lt;section&gt;/&lt;topic&gt;/article.md</code>，背景图放在 <code>source/uploads/backgrounds/</code>。
+    content: 文档统一维护在 <code>source/_posts/&lt;一级目录&gt;/&lt;二级目录&gt;/article.md</code>，背景图放在 <code>source/uploads/backgrounds/</code>。
   card_recent_post:
     enable: true
     limit: 5
@@ -208,3 +209,6 @@ font:
 inject:
   head:
     - <link rel="stylesheet" href="/css/custom.css">
+  bottom:
+    - <script data-pjax src="/js/custom.js"></script>
+
