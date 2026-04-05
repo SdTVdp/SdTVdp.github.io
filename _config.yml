@@ -33,7 +33,7 @@ external_link:
   exclude: []
 filename_case: 0
 render_drafts: false
-post_asset_folder: false
+post_asset_folder: true
 relative_link: false
 future: true
 
@@ -42,6 +42,10 @@ prismjs:
   preprocess: true
   line_number: false
   tab_replace: ""
+
+marked:
+  prependRoot: true
+  postAsset: true
 
 index_generator:
   path: blog

@@ -189,49 +189,53 @@ div#archive {
   width: calc(100% - 318px);
 }
 
-.click-halo {
+.click-burst {
   position: fixed;
   left: 0;
   top: 0;
-  width: var(--halo-size, 148px);
-  height: var(--halo-size, 148px);
-  margin-left: calc(var(--halo-size, 148px) * -0.5);
-  margin-top: calc(var(--halo-size, 148px) * -0.5);
-  border-radius: 50%;
+  width: 0;
+  height: 0;
   pointer-events: none;
   z-index: 9999;
+}
+
+.click-burst-particle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--particle-size, 12px);
+  height: var(--particle-size, 12px);
+  margin-left: calc(var(--particle-size, 12px) * -0.5);
+  margin-top: calc(var(--particle-size, 12px) * -0.5);
+  border-radius: 50%;
   opacity: 0;
-  background:
-    radial-gradient(circle, rgba(var(--halo-rgb, 23, 76, 128), 0.24) 0, rgba(var(--halo-rgb, 23, 76, 128), 0.16) 26%, rgba(var(--halo-rgb, 23, 76, 128), 0.04) 55%, rgba(var(--halo-rgb, 23, 76, 128), 0) 74%);
+  background: radial-gradient(circle at 32% 32%, rgba(var(--particle-rgb, 23, 76, 128), 0.95), rgba(var(--particle-rgb, 23, 76, 128), 0.46) 62%, rgba(var(--particle-rgb, 23, 76, 128), 0.08) 100%);
   box-shadow:
-    0 0 0 1px rgba(var(--halo-rgb, 23, 76, 128), 0.26),
-    0 0 24px rgba(var(--halo-rgb, 23, 76, 128), 0.16);
-  mix-blend-mode: screen;
-  animation: click-halo-burst 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    0 0 0 1px rgba(var(--particle-rgb, 23, 76, 128), 0.24),
+    0 0 18px rgba(var(--particle-rgb, 23, 76, 128), 0.22);
+  animation: click-burst-fly var(--particle-duration, 680ms) cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  animation-delay: var(--particle-delay, 0ms);
 }
 
-[data-theme="dark"] .click-halo {
-  mix-blend-mode: lighten;
-}
-
-@keyframes click-halo-burst {
+@keyframes click-burst-fly {
   0% {
     opacity: 0;
-    transform: translate3d(var(--halo-x, 0), var(--halo-y, 0), 0) scale(0.2);
+    transform: translate3d(0, 0, 0) scale(0.68);
   }
 
   18% {
-    opacity: 0.92;
+    opacity: 0.96;
   }
 
   100% {
     opacity: 0;
-    transform: translate3d(var(--halo-x, 0), var(--halo-y, 0), 0) scale(1);
+    transform: translate3d(var(--particle-x, 0), var(--particle-y, 0), 0) scale(0.18);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .click-halo {
+  .click-burst,
+  .click-burst-particle {
     display: none;
   }
 }

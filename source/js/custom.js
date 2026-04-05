@@ -10,6 +10,17 @@
   const clampChannel = (value) => Math.max(0, Math.min(255, Math.round(value)));
   const prefersReducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  const createSeededRandom = (seed) => {
+    let state = seed >>> 0;
+
+    return () => {
+      state += 0x6d2b79f5;
+      let next = Math.imul(state ^ (state >>> 15), 1 | state);
+      next ^= next + Math.imul(next ^ (next >>> 7), 61 | next);
+      return ((next ^ (next >>> 14)) >>> 0) / 4294967296;
+    };
+  };
+
   const parseColor = (input) => {
     const value = String(input || "").trim();
 
@@ -68,20 +79,17 @@
     );
   };
 
-  const buildHaloColor = (baseColor) => {
-    const luminance = baseColor.r * 0.299 + baseColor.g * 0.587 + baseColor.b * 0.114;
-    const shift = 12 + Math.floor(Math.random() * 14);
-    const direction = luminance < 128 ? 1 : -1;
-    const variance = () => direction * (shift + Math.floor(Math.random() * 7) - 3);
+  const nudgeColor = (baseColor, random) => {
+    const jitter = () => Math.floor(random() * 31) - 15;
 
     return {
-      r: clampChannel(baseColor.r + variance()),
-      g: clampChannel(baseColor.g + variance()),
-      b: clampChannel(baseColor.b + variance()),
+      r: clampChannel(baseColor.r + jitter()),
+      g: clampChannel(baseColor.g + jitter()),
+      b: clampChannel(baseColor.b + jitter()),
     };
   };
 
-  const spawnHalo = (event) => {
+  const spawnBurst = (event) => {
     if (prefersReducedMotion()) {
       return;
     }
@@ -90,24 +98,44 @@
       return;
     }
 
+    const startedAt = Date.now() >>> 0;
+    const random = createSeededRandom(startedAt);
     const seedColor = getSeedColor(event.target);
-    const haloColor = buildHaloColor(seedColor);
-    const halo = document.createElement("span");
-    const size = 132 + Math.floor(Math.random() * 48);
-    const driftX = Math.floor(Math.random() * 18) - 9;
-    const driftY = Math.floor(Math.random() * 18) - 9;
+    const particleCount = 3 + Math.floor(random() * 8);
+    const burst = document.createElement("span");
 
-    halo.className = "click-halo";
-    halo.style.left = `${event.clientX}px`;
-    halo.style.top = `${event.clientY}px`;
-    halo.style.setProperty("--halo-size", `${size}px`);
-    halo.style.setProperty("--halo-rgb", `${haloColor.r}, ${haloColor.g}, ${haloColor.b}`);
-    halo.style.setProperty("--halo-x", `${driftX}px`);
-    halo.style.setProperty("--halo-y", `${driftY}px`);
+    burst.className = "click-burst";
+    burst.style.left = `${event.clientX}px`;
+    burst.style.top = `${event.clientY}px`;
 
-    document.body.appendChild(halo);
-    halo.addEventListener("animationend", () => halo.remove(), { once: true });
+    let maxDuration = 0;
+
+    for (let index = 0; index < particleCount; index += 1) {
+      const particle = document.createElement("span");
+      const angle = random() * Math.PI * 2;
+      const distance = 34 + random() * 78;
+      const driftX = Math.cos(angle) * distance;
+      const driftY = Math.sin(angle) * distance;
+      const size = 8 + random() * 10;
+      const duration = 520 + random() * 360;
+      const delay = random() * 60;
+      const color = nudgeColor(seedColor, random);
+
+      particle.className = "click-burst-particle";
+      particle.style.setProperty("--particle-size", `${size}px`);
+      particle.style.setProperty("--particle-rgb", `${color.r}, ${color.g}, ${color.b}`);
+      particle.style.setProperty("--particle-x", `${driftX.toFixed(2)}px`);
+      particle.style.setProperty("--particle-y", `${driftY.toFixed(2)}px`);
+      particle.style.setProperty("--particle-duration", `${duration.toFixed(0)}ms`);
+      particle.style.setProperty("--particle-delay", `${delay.toFixed(0)}ms`);
+
+      burst.appendChild(particle);
+      maxDuration = Math.max(maxDuration, duration + delay);
+    }
+
+    document.body.appendChild(burst);
+    window.setTimeout(() => burst.remove(), Math.ceil(maxDuration) + 120);
   };
 
-  document.addEventListener("pointerdown", spawnHalo, true);
+  document.addEventListener("pointerdown", spawnBurst, true);
 })();
