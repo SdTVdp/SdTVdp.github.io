@@ -1,8 +1,8 @@
----
+﻿---
 title: 开始前先看这里
 date: 2026-04-02 20:00:00
 sticky: 100
-excerpt: 这是一篇置顶导览文，用来说明博客的二级目录分类方式、归档约定，以及后续写作时该把文章放在哪里。
+excerpt: 这是一篇置顶导览文，用来说明博客的三层目录分类方式、归档约定，以及后续写作时该把文章放在哪里。
 tags:
   - start
   - markdown
@@ -13,26 +13,29 @@ tags:
 
 ## 现在的文章目录怎么放
 
-文章主目录仍然是 `source/_posts/`，但现在推荐使用两级目录结构：
+文章主目录仍然是 `source/_posts/`，但现在推荐使用三层目录结构：
 
 ```text
 source/_posts/
-  start-here/site-map/start-here.md
-  guides/organization/archive-and-tags.md
-  guides/search/local-search-notes.md
+  2025/ctf/re/蓝桥杯两道逆向.md
+  2025/ctf/re/2025_TGCTF.md
+  2026/guides/organization/archive-and-tags.md
+  2026/guides/search/local-search-notes.md
+  2026/start-here/site-map/start-here.md
 ```
 
 这个结构的意思是：
 
-1. 第一级目录表示大的内容分区，例如 `start-here`、`guides`、`notes`
-2. 第二级目录表示更具体的主题，例如 `site-map`、`organization`、`search`
-3. 文章文件继续放在第二级目录里，方便长期归档和批量整理
+1. 第一级目录固定写年份，例如 `2025`、`2026`
+2. 第二级目录表示大的内容分区，例如 `ctf`、`guides`、`start-here`
+3. 第三级目录表示更具体的主题，例如 `re`、`organization`、`search`、`site-map`
 
-如果文章没有手动写 `categories`，站点会自动把这两级目录映射成文章分类。
+如果文章没有手动写 `categories`，站点会自动把这三级目录映射成文章分类。
 
 ### 推荐的日常写法
 
-- 先确定文章属于哪个一级目录和二级主题
+- 先确认文章属于哪一年
+- 再确定一级目录和二级主题
 - 每篇文章都写 `title`、`date`、`excerpt`
 - 标签继续用于跨分类检索，分类则主要负责归档
 - 代码块记得标语言，方便高亮和搜索命中
@@ -64,7 +67,7 @@ sticky: 100
 
 ## 还可以继续怎么扩展
 
-- 新开 `notes/daily/` 存放阶段性笔记
-- 新开 `projects/logs/` 存放项目记录
+- 新开 `2026/notes/daily/` 存放阶段性笔记
+- 新开 `2026/projects/logs/` 存放项目记录
 - 上传资源继续放在 `source/uploads/`
 - 背景图统一放在 `source/uploads/backgrounds/`

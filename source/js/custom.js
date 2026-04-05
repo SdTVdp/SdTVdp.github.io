@@ -405,7 +405,7 @@
   };
 
   const nudgeColor = (baseColor, random) => {
-    const spread = 26 + Math.floor(random() * 52);
+    const spread = 12 + Math.floor(random() * 16);
     const jitter = () => Math.floor(random() * (spread * 2 + 1)) - spread;
 
     return {
@@ -471,3 +471,4 @@
     true
   );
 })();
+

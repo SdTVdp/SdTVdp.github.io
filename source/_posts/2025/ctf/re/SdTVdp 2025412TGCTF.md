@@ -1,3 +1,11 @@
+﻿---
+title: "2025_TGCTF"
+date: 2025-04-12 9:00:00
+excerpt: "TGCTF 与 HZNUCTF 部分逆向题记录，包含 base64、Unity、z3 和 XTEA 题目。"
+tags:
+  - reverse
+  - competition
+---
 # 1.base64
 <!-- 这是一张图片，ocr 内容为： -->
 ![](https://cdn.nlark.com/yuque/0/2025/png/50154293/1745990085942-da9a21c5-3198-4586-b2d5-c144d145a3b0.png)
@@ -232,6 +240,7 @@ if  s.check() == sat:
 
 <!-- 这是一张图片，ocr 内容为： -->
 ![](https://cdn.nlark.com/yuque/0/2025/png/50154293/1746022348652-8b013700-dde6-47d3-a6d6-0bff72a40c80.png)
+
 
 
 

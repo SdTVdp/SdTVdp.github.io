@@ -12,7 +12,9 @@
 
 - `source/_posts/`：后续维护 Markdown 文档的主目录
 - `source/uploads/backgrounds/`：背景图存放目录
+- `source/uploads/imported/`：自动缓存导入图片的目录
 - `source/css/custom.css`：对 Butterfly 的配色、字体和卡片样式覆盖
+- `source/js/custom.js`：点击粒子和取色逻辑
 - `_config.yml`：Hexo 站点配置
 - `_config.butterfly.yml`：Butterfly 主题配置
 - `.github/workflows/pages.yml`：GitHub Pages 自动构建与部署
@@ -39,22 +41,24 @@ npm run build
 
 ## 新增 Markdown 文档
 
-文章主目录仍然是 `source/_posts/`，但现在建议按“两级目录”来放，方便分类页和归档长期维护。
+文章主目录仍然是 `source/_posts/`，但现在推荐按“三层目录”来放，方便年份归档、分类页和长期维护。
 
 推荐结构：
 
 ```text
 source/_posts/
-  ctf/re/蓝桥杯两道逆向.md
-  guides/search/local-search-notes.md
-  start-here/site-map/start-here.md
+  2025/ctf/re/蓝桥杯两道逆向.md
+  2025/ctf/re/2025_TGCTF.md
+  2026/guides/search/local-search-notes.md
+  2026/start-here/site-map/start-here.md
 ```
 
 这样做的效果是：
 
-- 第一级目录表示大的内容分区，例如 `ctf`、`guides`
-- 第二级目录表示更细的主题，例如 `re`、`search`
-- 如果你没有手动写 `categories`，站点会自动把这两级目录映射成文章分类
+- 第一级目录表示年份，例如 `2025`、`2026`
+- 第二级目录表示大的内容分区，例如 `ctf`、`guides`
+- 第三级目录表示更细的主题，例如 `re`、`search`
+- 如果你没有手动写 `categories`，站点会自动把这三级目录映射成文章分类
 
 新文章可以直接照这个模板写：
 
@@ -71,8 +75,6 @@ tags:
 这里开始写正文。
 ```
 
-如果你只把文章放在 `source/_posts/ctf_re/文章.md` 这种一级目录里，分类就只有一层，不方便后面归档。
-
 如果你想把文章固定在首页顶部，可以继续写：
 
 ```md
@@ -81,9 +83,31 @@ sticky: 10
 
 当前项目会自动把 `sticky` 映射给 Butterfly 的首页置顶排序。
 
+## `excerpt` 是做什么的
+
+`excerpt` 可以理解成“文章摘要”。它在你现在这套站点里至少有这几个用途：
+
+- 作为首页和列表页更短的说明文字来源
+- 作为本地搜索索引里的摘要字段
+- 当主题需要生成文章简介时，优先用它而不是直接截正文
+
+如果你不写 `excerpt`，主题通常会退回去截正文前几句；能用，但往往不够精确。
+
+最推荐的写法是：
+
+- 用 1 句话概括这篇文章讲什么
+- 尽量控制在 30 到 80 个字
+- 不要直接复制标题
+
+例如：
+
+```yml
+excerpt: "TGCTF 与 HZNUCTF 部分逆向题记录，包含 base64、Unity、z3 和 XTEA 题目。"
+```
+
 ## 导入带图片的 Markdown
 
-现在可以直接把带图片的 Markdown 放进 `source/_posts/<一级目录>/<二级目录>/` 里，Hexo 会在构建时自动处理常见图片写法。
+现在可以直接把带图片的 Markdown 放进 `source/_posts/<年份>/<一级目录>/<二级目录>/` 里，Hexo 会在构建时自动处理常见图片写法。
 
 当前支持：
 
@@ -102,7 +126,7 @@ sticky: 10
 
 你以后从 Obsidian 或语雀迁移文章时，建议这样做：
 
-1. 把 Markdown 文件放到 `source/_posts/<一级目录>/<二级目录>/`
+1. 把 Markdown 文件放到 `source/_posts/<年份>/<一级目录>/<二级目录>/`
 2. 如果是本地图片，把图片文件夹一起复制到附近
 3. 执行 `npm run build`
 4. 检查 `source/uploads/imported/` 是否自动出现了对应图片
@@ -144,6 +168,7 @@ tags:
 - 本地全文搜索，数据来自 `search.json`
 - 标签页、归档页、分类页
 - 代码高亮与复制按钮
+- 自动导入常见 Markdown 图片
 
 ## 更换背景图
 
@@ -164,58 +189,26 @@ tag_img: /uploads/backgrounds/background-placeholder.svg
 - 用户主页仓库 `username.github.io`：保持 `_config.yml` 中 `root: /`
 - 项目页仓库 `username.github.io/my-blog`：把 `url` 改成完整地址，并把 `root` 改成 `/my-blog/`
 
-更改首页：
-主页内容主要改这 4 个地方就够了。
+## 更改首页
 
-1. 改首页文案和模块内容  
-看这个文件：[source/index.html](/D:/my%20blog/source/index.html#L1)  
-这里就是 `/` 根首页本体。你现在看到的这些内容都在里面：
-- 标题“你好，我是 SdTVdp。”：[source/index.html](/D:/my%20blog/source/index.html#L23)
-- 主页简介：[source/index.html](/D:/my%20blog/source/index.html#L24)
-- “进入博客 / 查看归档 / 浏览标签”按钮：[source/index.html](/D:/my%20blog/source/index.html#L28)
-- “当前关注”“我会在这里持续记录什么”“联系我”这些区块也都在同一个文件里
+主页内容主要改这几个地方就够了：
 
-2. 改主页样式  
-看这个文件：[source/css/custom.css](/D:/my%20blog/source/css/custom.css#L198)  
-这里控制主页的卡片、头像、按钮、标签、间距、深浅色下的视觉效果。  
-如果你只是改文字，不用动它；如果你想改排版、颜色、圆角、按钮样式，就改这里。
-
-3. 改头像、导航、站点级配置  
-看这个文件：[_config.butterfly.yml](/D:/my%20blog/_config.butterfly.yml#L1)  
-这里常改的是：
-- 顶部导航 `menu`
-- 侧边栏和站点头像 `avatar.img`
-- 社交链接 `social`
-- 默认头图 `default_top_img`
-
-4. 改站点名和全局描述  
-看这个文件：[_config.yml](/D:/my%20blog/_config.yml#L1)  
-这里的：
-- `title: Minimal Cascade`
-- `description`
-- `author`
-会影响浏览器标题、站点名等全局信息。
-
-最常见的几个改法：
-- 改名字：把 [source/index.html](/D:/my%20blog/source/index.html#L23) 的 `你好，我是 SdTVdp。` 改成你想要的名字
-- 改简介：改 [source/index.html](/D:/my%20blog/source/index.html#L24)
-- 改联系方式：改 [source/index.html](/D:/my%20blog/source/index.html#L121) 和 [source/index.html](/D:/my%20blog/source/index.html#L125)
-- 改头像：改 [source/index.html](/D:/my%20blog/source/index.html#L17) 和 [_config.butterfly.yml](/D:/my%20blog/_config.butterfly.yml#L24)
-- 改主页头图：改 [source/index.html](/D:/my%20blog/source/index.html#L5)
-  先把图片放到 `source/uploads/backgrounds/`，再写成 `/uploads/backgrounds/你的图片名.jpg`
-- 改详细自我介绍页：直接改 [source/about/index.md](/D:/my%20blog/source/about/index.md#L1)
+1. 改首页文案和模块内容：`source/index.html`
+2. 改主页样式：`source/css/custom.css`
+3. 改头像、导航、站点级配置：`_config.butterfly.yml`
+4. 改站点名和全局描述：`_config.yml`
+5. 改详细自我介绍页：`source/about/index.md`
 
 改完以后这样预览和发布：
+
 ```powershell
 npm run server
 ```
 
 本地打开 `http://localhost:4000/` 看效果。确认没问题后再执行：
+
 ```powershell
 git add .
-git commit -m "Update homepage content"
+git commit -m "Update site content"
 git push origin main
 ```
-
-如果你愿意，我也可以直接帮你把主页文案改成你想要的版本。你只要把“名字、简介、联系方式、想展示的几个模块”发给我，我直接替你改好。
-

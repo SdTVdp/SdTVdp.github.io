@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 const hasAssignedCategories = (categories) => {
   if (!categories) {
@@ -29,7 +29,7 @@ const deriveCategoriesFromSource = (source) => {
     return [];
   }
 
-  return parts.slice(postRootIndex + 1, -1).slice(0, 2);
+  return parts.slice(postRootIndex + 1, -1).slice(0, 3);
 };
 
 const asArray = (posts) => {
