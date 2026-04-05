@@ -25,6 +25,12 @@ if not defined COMMIT_MSG (
   set /p COMMIT_MSG=Enter commit message: 
 )
 
+:trim_leading
+if defined COMMIT_MSG if "%COMMIT_MSG:~0,1%"==" " (
+  set "COMMIT_MSG=%COMMIT_MSG:~1%"
+  goto trim_leading
+)
+
 if not defined COMMIT_MSG (
   echo Commit message cannot be empty.
   if "%NEED_PAUSE%"=="1" pause
