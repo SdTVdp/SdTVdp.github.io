@@ -1,4 +1,4 @@
-# Butterfly GitHub Pages 站点
+﻿# Butterfly GitHub Pages 站点
 
 这个目录现在使用 Hexo + Butterfly 主题，并已经连到 `SdTVdp.github.io`。
 
@@ -80,6 +80,39 @@ sticky: 10
 ```
 
 当前项目会自动把 `sticky` 映射给 Butterfly 的首页置顶排序。
+
+## 导入带图片的 Markdown
+
+现在可以直接把带图片的 Markdown 放进 `source/_posts/<一级目录>/<二级目录>/` 里，Hexo 会在构建时自动处理常见图片写法。
+
+当前支持：
+
+- 普通 Markdown 图片：`![](image.png)`、`![](./assets/demo.jpg)`
+- Obsidian 图片语法：`![[Pasted image 1.png]]`
+- HTML 图片：`<img src="image.png">`
+- 远程图片：例如语雀导出的 `https://...png`
+
+自动处理规则：
+
+- 本地图片会优先按文章所在目录、文章同名资源目录去找
+- 如果还是没找到，会继续在整个 `source/` 目录里按文件名查找
+- 远程图片会在第一次构建时自动下载并缓存
+- 处理后的图片会统一放到 `source/uploads/imported/` 下面
+- 这些导入后的图片会在站点里以 `/uploads/imported/...` 的形式发布
+
+你以后从 Obsidian 或语雀迁移文章时，建议这样做：
+
+1. 把 Markdown 文件放到 `source/_posts/<一级目录>/<二级目录>/`
+2. 如果是本地图片，把图片文件夹一起复制到附近
+3. 执行 `npm run build`
+4. 检查 `source/uploads/imported/` 是否自动出现了对应图片
+5. `git add .`、`git commit`、`git push`
+
+注意：
+
+- 如果是语雀远程图，第一次构建时需要联网，成功后图片会缓存到仓库里
+- 如果 Obsidian 图片文件根本没有复制进这个项目，Hexo 当然也没法替你凭空找出来
+- 最稳妥的方式仍然是“Markdown 和图片一起复制进仓库”，这样后续构建和部署都不会依赖外部图床
 
 ## 正确添加 tag
 
@@ -185,3 +218,4 @@ git push origin main
 ```
 
 如果你愿意，我也可以直接帮你把主页文案改成你想要的版本。你只要把“名字、简介、联系方式、想展示的几个模块”发给我，我直接替你改好。
+
