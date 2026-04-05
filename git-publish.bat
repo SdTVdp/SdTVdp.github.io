@@ -1,6 +1,7 @@
 @echo off
 setlocal
 set "NEED_PAUSE=0"
+set "COMMIT_MSG="
 
 if "%~1"=="" set "NEED_PAUSE=1"
 
@@ -10,7 +11,16 @@ echo [1/5] Current git status:
 git status --short
 if errorlevel 1 goto :fail
 
-set "COMMIT_MSG=%*"
+if not "%~1"=="" (
+  set "COMMIT_MSG=%~1"
+  :collect_args
+  shift
+  if "%~1"=="" goto after_args
+  set "COMMIT_MSG=%COMMIT_MSG% %~1"
+  goto collect_args
+)
+
+:after_args
 if not defined COMMIT_MSG (
   set /p COMMIT_MSG=Enter commit message: 
 )
