@@ -59,19 +59,87 @@ const hashText = (value) => {
 const getTagHue = (tagName) => 18 + (hashText(String(tagName || "").trim().toLowerCase() || "tag") % 320);
 const buildTagStyle = (tagName) => `--tag-hue:${getTagHue(tagName)};`;
 
+const syncExcerptToDescription = (entry) => {
+  const excerpt = htmlToText(entry?.excerpt || "");
+
+  if (!excerpt || htmlToText(entry?.description || "")) {
+    return entry;
+  }
+
+  if (typeof entry?.set === "function") {
+    entry.set("description", excerpt);
+  } else {
+    entry.description = excerpt;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(entry || {}, "postDesc")) {
+    entry.postDesc = undefined;
+  }
+
+  return entry;
+};
+
+const buildPostDescription = (entry) => {
+  const explicit = htmlToText(entry?.excerpt || entry?.description || "");
+  const content = htmlToText(entry?.content || "");
+  const { length = 180, method } = hexo.theme.config.index_post_content || {};
+
+  if (method === false) {
+    return "";
+  }
+
+  if (method === 1) {
+    return explicit;
+  }
+
+  if (method === 2) {
+    return explicit || content.slice(0, length);
+  }
+
+  return content.slice(0, length);
+};
+
+hexo.extend.filter.register("before_post_render", (data) => syncExcerptToDescription(data));
+
 hexo.extend.filter.register("before_generate", () => {
   const posts = asArray(hexo.locals.get("posts"));
 
-  posts.forEach((post) => {
+  return Promise.all(posts.map((post) => {
     const sticky = getStickyValue(post);
 
+    syncExcerptToDescription(post);
+
     if (sticky > 0 && !post.top) {
-      post.top = sticky;
+      if (typeof post?.set === "function") {
+        post.set("top", sticky);
+      } else {
+        post.top = sticky;
+      }
     }
-  });
+
+    if (typeof post?.save === "function") {
+      return post.save();
+    }
+
+    return null;
+  }));
 });
 
+const registerPostDescHelper = () => {
+  hexo.extend.helper.register("postDesc", (entry) => {
+    const result = buildPostDescription(entry);
+
+    if (entry && typeof entry === "object") {
+      entry.postDesc = result;
+    }
+
+    return result;
+  });
+};
+
 hexo.extend.helper.register("plain_text", (value) => htmlToText(value));
+registerPostDescHelper();
+hexo.on("generateBefore", registerPostDescHelper);
 hexo.extend.helper.register("sticky_value", (post) => getStickyValue(post));
 hexo.extend.helper.register("sorted_posts", (posts) => sortPosts(posts));
 hexo.extend.helper.register("post_summary", (post, limit = 136) =>
@@ -114,3 +182,5 @@ hexo.extend.generator.register("search-index", (locals) => {
     layout: false,
   };
 });
+
+
