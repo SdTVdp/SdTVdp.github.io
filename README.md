@@ -212,3 +212,40 @@ git add .
 git commit -m "Update site content"
 git push origin main
 ```
+
+## 一键提交批处理
+
+仓库根目录现在有一个批处理文件：
+
+- `git-publish.bat`
+
+它会自动执行这几步：
+
+1. 显示当前 Git 改动
+2. 运行 `npm run build`
+3. 自动 `git add -A`
+4. 让你输入提交说明，或者直接使用你传入的说明
+5. 自动 `git commit`
+6. 自动 `git push origin main`
+
+最简单的用法：
+
+```powershell
+.\git-publish.bat
+```
+
+运行后它会让你输入本次提交说明。
+
+如果你想一行命令直接提交：
+
+```powershell
+.\git-publish.bat "更新 TGCTF 文章封面"
+```
+
+如果你平时喜欢双击文件，也可以直接在资源管理器里双击 `git-publish.bat`，然后按提示输入提交说明。
+
+注意：
+
+- 这个脚本会先构建站点，构建失败时不会继续提交
+- 默认会推送到 `origin/main`
+- 如果这次没有任何改动，`git commit` 会失败，这是正常现象
