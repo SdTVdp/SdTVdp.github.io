@@ -32,6 +32,7 @@
         });
     };
     const bitmapCache = new Map();
+    let themeObserverBound = false;
     const createSeededRandom = (seed) => {
         let state = seed >>> 0;
         return () => {
@@ -419,8 +420,192 @@
         document.body.appendChild(burst);
         window.setTimeout(() => burst.remove(), Math.ceil(maxDuration) + 140);
     };
+    const blendColor = (foreground, background) => {
+        const alpha = Math.max(0, Math.min(1, foreground.a));
+        const inverseAlpha = 1 - alpha;
+        return {
+            r: clampChannel(foreground.r * alpha + background.r * inverseAlpha),
+            g: clampChannel(foreground.g * alpha + background.g * inverseAlpha),
+            b: clampChannel(foreground.b * alpha + background.b * inverseAlpha),
+            a: 1,
+        };
+    };
+    const invertColor = (color) => ({
+        r: 255 - color.r,
+        g: 255 - color.g,
+        b: 255 - color.b,
+        a: 1,
+    });
+    const mixColor = (from, to, amount) => {
+        const ratio = Math.max(0, Math.min(1, amount));
+        const inverseRatio = 1 - ratio;
+        return {
+            r: clampChannel(from.r * inverseRatio + to.r * ratio),
+            g: clampChannel(from.g * inverseRatio + to.g * ratio),
+            b: clampChannel(from.b * inverseRatio + to.b * ratio),
+            a: 1,
+        };
+    };
+    const getRelativeLuminance = (color) => {
+        const toLinear = (channel) => {
+            const normalized = channel / 255;
+            return normalized <= 0.03928 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4;
+        };
+        return 0.2126 * toLinear(color.r) + 0.7152 * toLinear(color.g) + 0.0722 * toLinear(color.b);
+    };
+    const getContrastRatio = (foreground, background) => {
+        const resolvedForeground = foreground.a >= 0.999 ? foreground : blendColor(foreground, background);
+        const lighter = Math.max(getRelativeLuminance(resolvedForeground), getRelativeLuminance(background));
+        const darker = Math.min(getRelativeLuminance(resolvedForeground), getRelativeLuminance(background));
+        return (lighter + 0.05) / (darker + 0.05);
+    };
+    const getColorDistance = (left, right) => Math.hypot(left.r - right.r, left.g - right.g, left.b - right.b);
+    const getThemeBackdropColor = () => parseColor(window.getComputedStyle(document.documentElement).getPropertyValue("--global-bg")) ||
+        parseColor(window.getComputedStyle(document.body).backgroundColor) ||
+        { r: 31, g: 30, b: 51, a: 1 };
+    const getEffectiveBackgroundColor = (element) => {
+        const layers = [];
+        let current = element;
+        while (current) {
+            const background = parseColor(window.getComputedStyle(current).backgroundColor);
+            if (background && background.a > 0.01) {
+                layers.unshift(background);
+            }
+            current = current.parentElement;
+        }
+        return layers.reduce((resolved, layer) => {
+            if (layer.a >= 0.999) {
+                return { r: layer.r, g: layer.g, b: layer.b, a: 1 };
+            }
+            return blendColor(layer, resolved);
+        }, getThemeBackdropColor());
+    };
+    const chooseReadableColor = (foreground, background) => {
+        const resolvedForeground = foreground.a >= 0.999 ? { ...foreground, a: 1 } : blendColor(foreground, background);
+        const backdropInverse = invertColor(background);
+        const neutralTarget = getRelativeLuminance(background) < 0.35
+            ? { r: 245, g: 247, b: 255, a: 1 }
+            : { r: 21, g: 36, b: 58, a: 1 };
+        const threshold = 4.8;
+        const candidates = [
+            resolvedForeground,
+            mixColor(resolvedForeground, neutralTarget, 0.34),
+            mixColor(resolvedForeground, neutralTarget, 0.52),
+            mixColor(resolvedForeground, neutralTarget, 0.72),
+            invertColor(resolvedForeground),
+            mixColor(resolvedForeground, backdropInverse, 0.5),
+            mixColor(resolvedForeground, backdropInverse, 0.72),
+            backdropInverse,
+        ];
+        const ranked = candidates
+            .filter((candidate, index, list) => list.findIndex((item) => item.r === candidate.r && item.g === candidate.g && item.b === candidate.b) === index)
+            .map((candidate) => ({
+            candidate,
+            contrast: getContrastRatio(candidate, background),
+            distance: getColorDistance(candidate, resolvedForeground),
+        }));
+        const passing = ranked
+            .filter((entry) => entry.contrast >= threshold)
+            .sort((left, right) => left.distance - right.distance || right.contrast - left.contrast);
+        if (passing.length > 0) {
+            return passing[0].candidate;
+        }
+        ranked.sort((left, right) => right.contrast - left.contrast || left.distance - right.distance);
+        return ranked[0]?.candidate || resolvedForeground;
+    };
+    const isDarkTheme = () => document.documentElement.getAttribute("data-theme") === "dark" ||
+        document.body.getAttribute("data-theme") === "dark";
+    const getAdaptiveContrastTargets = (root = document) => {
+        if (!("querySelectorAll" in root)) {
+            return [];
+        }
+        const selector = [
+            "#article-container :not(pre) > code",
+            "#article-container mark",
+            "#article-container kbd",
+            "#article-container samp",
+            "#article-container font[color]",
+            "#article-container [style*=\"color\"]",
+        ].join(", ");
+        return Array.from(root.querySelectorAll(selector)).filter((element, index, list) => {
+            if (!element.textContent || !element.textContent.trim()) {
+                return false;
+            }
+            return list.indexOf(element) === index;
+        });
+    };
+    const rememberAdaptiveColorState = (element) => {
+        if (element.dataset.sdtvdpColorCaptured === "true") {
+            return;
+        }
+        element.dataset.sdtvdpColorCaptured = "true";
+        element.dataset.sdtvdpOriginalColor = element.style.getPropertyValue("color");
+        element.dataset.sdtvdpOriginalColorPriority = element.style.getPropertyPriority("color");
+    };
+    const restoreAdaptiveColorState = (element) => {
+        if (element.dataset.sdtvdpColorCaptured !== "true") {
+            return;
+        }
+        const originalColor = element.dataset.sdtvdpOriginalColor || "";
+        const originalPriority = element.dataset.sdtvdpOriginalColorPriority || "";
+        if (originalColor) {
+            element.style.setProperty("color", originalColor, originalPriority);
+        }
+        else {
+            element.style.removeProperty("color");
+        }
+        delete element.dataset.sdtvdpAdaptiveContrast;
+    };
+    const adaptInlineTextContrast = (root = document) => {
+        const targets = getAdaptiveContrastTargets(root);
+        if (!isDarkTheme()) {
+            targets.forEach((element) => restoreAdaptiveColorState(element));
+            return;
+        }
+        targets.forEach((element) => {
+            const computedStyle = window.getComputedStyle(element);
+            if (computedStyle.display === "none" || computedStyle.visibility === "hidden") {
+                return;
+            }
+            const foreground = parseColor(computedStyle.color);
+            if (!foreground) {
+                return;
+            }
+            const background = getEffectiveBackgroundColor(element);
+            const currentContrast = getContrastRatio(foreground, background);
+            if (currentContrast >= 4.8) {
+                restoreAdaptiveColorState(element);
+                return;
+            }
+            const adaptedColor = chooseReadableColor(foreground, background);
+            rememberAdaptiveColorState(element);
+            element.dataset.sdtvdpAdaptiveContrast = "true";
+            element.style.setProperty("color", `rgb(${adaptedColor.r}, ${adaptedColor.g}, ${adaptedColor.b})`, "important");
+        });
+    };
+    const observeThemeChanges = () => {
+        if (themeObserverBound) {
+            return;
+        }
+        themeObserverBound = true;
+        const observer = new MutationObserver(() => {
+            window.requestAnimationFrame(() => adaptInlineTextContrast());
+        });
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ["data-theme"],
+        });
+        if (document.body) {
+            observer.observe(document.body, {
+                attributes: true,
+                attributeFilter: ["data-theme"],
+            });
+        }
+    };
     const activateUiEnhancements = () => {
         normalizeMailtoLinks();
+        observeThemeChanges();
+        window.requestAnimationFrame(() => adaptInlineTextContrast());
     };
     activateUiEnhancements();
     document.addEventListener("DOMContentLoaded", activateUiEnhancements);

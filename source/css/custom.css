@@ -166,6 +166,14 @@ div#archive {
 [data-theme="dark"] #article-container :not(pre) > code {
   border-color: rgba(169, 216, 255, 0.1);
   background: rgba(169, 216, 255, 0.1);
+  color: rgba(236, 244, 255, 0.96);
+}
+
+[data-theme="dark"] #article-container kbd,
+[data-theme="dark"] #article-container samp,
+[data-theme="dark"] #article-container [data-sdtvdp-adaptive-contrast="true"] {
+  color: rgba(236, 244, 255, 0.96);
+  text-shadow: 0 0 0.01px rgba(255, 255, 255, 0.18);
 }
 
 #local-search .search-dialog {
@@ -711,4 +719,5 @@ pre[class*="language-"] {
 [data-theme="dark"] #article-container [style*="color: rgb(0, 0, 0)"] {
   color: var(--font-color) !important;
 }
+
 
