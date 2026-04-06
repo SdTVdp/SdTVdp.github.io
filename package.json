@@ -4,15 +4,15 @@
   "private": true,
   "description": "Minimal searchable Hexo site for GitHub Pages",
   "scripts": {
-    "clean": "node tools/clean.mjs && hexo clean",
+    "clean": "npm run compile && hexo clean",
     "typecheck:hexo": "tsc --noEmit -p tsconfig.hexo.json",
     "typecheck:client": "tsc --noEmit -p tsconfig.client.json",
     "typecheck": "npm run typecheck:hexo && npm run typecheck:client",
     "compile:hexo": "tsc -p tsconfig.hexo.json",
     "compile:client": "tsc -p tsconfig.client.json",
     "compile": "npm run compile:hexo && npm run compile:client",
-    "build": "npm run typecheck && npm run compile && hexo generate",
-    "server": "npm run compile && hexo server"
+    "build": "npm run typecheck && npm run compile && hexo clean && hexo generate",
+    "server": "npm run compile && hexo clean && hexo server"
   },
   "hexo": {
     "version": "8.1.1"

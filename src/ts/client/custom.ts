@@ -481,7 +481,7 @@ interface DrawRectResult {
       const duration = 520 + random() * 280;
       const delay = random() * 40;
       const midStop = 42 + random() * 16;
-      const endColor = nudgeColor(seedColor, random, 10, 10);
+      const endColor = nudgeColor(seedColor, random, 18, 20);
 
       line.className = "click-burst-line";
       line.style.setProperty("--line-angle", `${angle}rad`);

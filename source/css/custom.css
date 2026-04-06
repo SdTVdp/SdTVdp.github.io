@@ -232,14 +232,15 @@ div#archive {
   will-change: transform, opacity;
   background: linear-gradient(
     90deg,
-    rgba(var(--line-start-rgb, 23, 76, 128), 0.96) 0%,
-    rgba(var(--line-start-rgb, 23, 76, 128), 0.96) var(--line-mid-stop, 50%),
-    rgba(var(--line-end-rgb, 48, 98, 152), 0.66) calc(var(--line-mid-stop, 50%) + 18%),
+    rgba(var(--line-start-rgb, 23, 76, 128), 0.98) 0%,
+    rgba(var(--line-start-rgb, 23, 76, 128), 0.98) var(--line-mid-stop, 50%),
+    rgba(var(--line-end-rgb, 48, 98, 152), 0.96) calc(var(--line-mid-stop, 50%) + 10%),
+    rgba(var(--line-end-rgb, 48, 98, 152), 0.58) 84%,
     rgba(var(--line-end-rgb, 48, 98, 152), 0) 100%
   );
   box-shadow:
-    0 0 0 1px rgba(var(--line-start-rgb, 23, 76, 128), 0.14),
-    0 0 18px rgba(var(--line-end-rgb, 48, 98, 152), 0.24);
+    0 0 0 1px rgba(var(--line-start-rgb, 23, 76, 128), 0.16),
+    0 0 24px rgba(var(--line-end-rgb, 48, 98, 152), 0.34);
   animation: click-burst-line-fly var(--line-duration, 620ms) cubic-bezier(0.16, 0.78, 0.24, 1) forwards;
   animation-delay: var(--line-delay, 0ms);
 }
@@ -673,11 +674,31 @@ div#archive {
 
 #article-container pre,
 figure.highlight,
-pre[class*="language-"] {
+pre[class*="language-"],
+#article-container blockquote.quote-code-like,
+#article-container blockquote.quote-code-like p,
+#article-container blockquote.quote-code-like li,
+#article-container blockquote.quote-code-like span {
   font-family: "JetBrains Mono", "Cascadia Code", "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
   font-variant-ligatures: none;
   font-feature-settings: "liga" 0, "calt" 0;
+}
+
+#article-container pre,
+figure.highlight,
+pre[class*="language-"] {
   line-height: 1.72;
+}
+
+#article-container blockquote.quote-code-like {
+  line-height: 1.92;
+  letter-spacing: -0.01em;
+  overflow-x: auto;
+}
+
+#article-container blockquote.quote-code-like p {
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 [data-theme="dark"] #article-container [style*="color:#000"],
@@ -690,3 +711,4 @@ pre[class*="language-"] {
 [data-theme="dark"] #article-container [style*="color: rgb(0, 0, 0)"] {
   color: var(--font-color) !important;
 }
+
