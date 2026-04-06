@@ -126,7 +126,7 @@ aside:
       link: https://github.com/SdTVdp
   card_announcement:
     enable: true
-    content: 文档统一维护在 <code>source/_posts/&lt;年份&gt;/&lt;一级目录&gt;/&lt;二级目录&gt;/article.md</code>，背景图放在 <code>source/uploads/backgrounds/</code>。
+    content: 本人的blog现已堂堂上架啦, ctf的reWP相关已经基本完成上传。
   card_recent_post:
     enable: true
     limit: 5
