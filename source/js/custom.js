@@ -7,6 +7,30 @@
     runtimeWindow.__sdtvdpCustomUiReady = true;
     const clampChannel = (value) => Math.max(0, Math.min(255, Math.round(value)));
     const prefersReducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const normalizeMailtoLinks = (root = document) => {
+        if (!("querySelectorAll" in root)) {
+            return;
+        }
+        root.querySelectorAll('a[href^="mailto:"]').forEach((anchor) => {
+            const href = anchor.getAttribute("href") || "";
+            if (!href) {
+                return;
+            }
+            anchor.removeAttribute("target");
+            anchor.removeAttribute("rel");
+            if (anchor.dataset.mailtoNormalized === "true") {
+                return;
+            }
+            anchor.dataset.mailtoNormalized = "true";
+            anchor.addEventListener("click", (event) => {
+                if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+                    return;
+                }
+                event.preventDefault();
+                window.location.href = href;
+            });
+        });
+    };
     const bitmapCache = new Map();
     const createSeededRandom = (seed) => {
         let state = seed >>> 0;
@@ -395,6 +419,12 @@
         document.body.appendChild(burst);
         window.setTimeout(() => burst.remove(), Math.ceil(maxDuration) + 140);
     };
+    const activateUiEnhancements = () => {
+        normalizeMailtoLinks();
+    };
+    activateUiEnhancements();
+    document.addEventListener("DOMContentLoaded", activateUiEnhancements);
+    document.addEventListener("pjax:complete", activateUiEnhancements);
     document.addEventListener("pointerdown", (event) => {
         void spawnBurst(event);
     }, true);

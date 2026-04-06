@@ -1,4 +1,4 @@
-interface CustomWindow extends Window {
+﻿interface CustomWindow extends Window {
   __sdtvdpCustomUiReady?: boolean;
 }
 
@@ -42,6 +42,37 @@ interface DrawRectResult {
 
   const clampChannel = (value: number): number => Math.max(0, Math.min(255, Math.round(value)));
   const prefersReducedMotion = (): boolean => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const normalizeMailtoLinks = (root: ParentNode = document): void => {
+    if (!("querySelectorAll" in root)) {
+      return;
+    }
+
+    root.querySelectorAll<HTMLAnchorElement>('a[href^="mailto:"]').forEach((anchor) => {
+      const href = anchor.getAttribute("href") || "";
+
+      if (!href) {
+        return;
+      }
+
+      anchor.removeAttribute("target");
+      anchor.removeAttribute("rel");
+
+      if (anchor.dataset.mailtoNormalized === "true") {
+        return;
+      }
+
+      anchor.dataset.mailtoNormalized = "true";
+      anchor.addEventListener("click", (event) => {
+        if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+          return;
+        }
+
+        event.preventDefault();
+        window.location.href = href;
+      });
+    });
+  };
   const bitmapCache = new Map<string, Promise<BitmapSample | null>>();
 
   const createSeededRandom = (seed: number): (() => number) => {
@@ -524,6 +555,14 @@ interface DrawRectResult {
     window.setTimeout(() => burst.remove(), Math.ceil(maxDuration) + 140);
   };
 
+  const activateUiEnhancements = (): void => {
+    normalizeMailtoLinks();
+  };
+
+  activateUiEnhancements();
+  document.addEventListener("DOMContentLoaded", activateUiEnhancements);
+  document.addEventListener("pjax:complete", activateUiEnhancements);
+
   document.addEventListener(
     "pointerdown",
     (event) => {
@@ -532,4 +571,6 @@ interface DrawRectResult {
     true
   );
 })();
+
+
 

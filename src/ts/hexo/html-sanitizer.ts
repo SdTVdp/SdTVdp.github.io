@@ -353,7 +353,7 @@ const sanitizeHtml = (input: string): string => {
   }
 
   const document = parseDocument(input, {
-    decodeEntities: false,
+    decodeEntities: true,
     lowerCaseAttributeNames: false,
     lowerCaseTags: false,
     recognizeSelfClosing: true,
@@ -378,4 +378,5 @@ hexo.extend.filter.register("after_post_render", (data: HexoRenderable & { more?
 
   return data;
 });
+
 
