@@ -54,6 +54,9 @@ echo [3/5] Staging changes...
 git add -A
 if errorlevel 1 goto :fail
 
+git diff --cached --quiet --exit-code
+if not errorlevel 1 goto :no_staged_changes
+
 echo.
 echo [4/5] Creating commit...
 git commit -m "%COMMIT_MSG%"
@@ -70,6 +73,30 @@ if errorlevel 1 goto :fail
 
 echo.
 echo Done: %COMMIT_MSG%
+if "%NEED_PAUSE%"=="1" pause
+exit /b 0
+
+:no_staged_changes
+for /f %%i in ('git rev-list --count origin/main..HEAD 2^>nul') do set "AHEAD_COUNT=%%i"
+if not defined AHEAD_COUNT set "AHEAD_COUNT=0"
+
+if not "%AHEAD_COUNT%"=="0" (
+  echo.
+  echo No new file changes were detected, but there are %AHEAD_COUNT% local commit^(s^) waiting to be pushed.
+  echo.
+  echo [4/5] Skipping commit because there are no new staged changes...
+  echo.
+  echo [5/5] Pushing to origin/main...
+  git push origin main
+  if errorlevel 1 goto :fail
+  echo.
+  echo Done: pushed %AHEAD_COUNT% existing local commit^(s^).
+  if "%NEED_PAUSE%"=="1" pause
+  exit /b 0
+)
+
+echo.
+echo No file changes detected. Nothing to commit or push.
 if "%NEED_PAUSE%"=="1" pause
 exit /b 0
 
