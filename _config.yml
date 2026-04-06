@@ -1,4 +1,4 @@
-title: Minimal Cascade
+﻿title: Minimal Cascade
 subtitle: ""
 description: 极简、可搜索、专注 Markdown 更新的 Hexo 站点
 keywords:
@@ -62,3 +62,4 @@ search:
   field: post
   content: true
   format: striptags
+

@@ -7,11 +7,11 @@ description: ""
 cover: ""
 top_img: ""
 tags:
-sticky:
+  - notes
 ---
 
-## 草稿背景
+## 背景
 
-## 当前进度
+## 记录
 
-## 下一步
+## 参考

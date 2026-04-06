@@ -84,7 +84,7 @@ samp,
 #local-search .search-dialog,
 #aside-content .item-headline,
 #page-header #nav .menus_items .menus_item > a {
-  font-family: "Cascadia Code", "JetBrains Mono", "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  font-family: "JetBrains Mono", "Cascadia Code", "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
 }
 
 #page-header::before {
@@ -360,7 +360,7 @@ div#archive {
 .landing-panel-label,
 .landing-card-kicker {
   margin: 0;
-  font-family: "Cascadia Code", "JetBrains Mono", "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  font-family: "JetBrains Mono", "Cascadia Code", "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
   font-size: 0.82rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -501,7 +501,7 @@ div#archive {
 
 .landing-inline-link::after {
   content: "->";
-  font-family: "Cascadia Code", "JetBrains Mono", "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  font-family: "JetBrains Mono", "Cascadia Code", "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
   font-size: 0.9rem;
 }
 
@@ -627,3 +627,12 @@ div#archive {
 
 
 
+
+#article-container pre,
+figure.highlight,
+pre[class*="language-"] {
+  font-family: "JetBrains Mono", "Cascadia Code", "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+  line-height: 1.72;
+}

@@ -174,6 +174,11 @@ search:
       enable: true
       hitsPerPage: 8
 
+lazyload:
+  enable: true
+  native: true
+  field: site
+
 share:
   use:
 
@@ -204,12 +209,13 @@ font:
   global_font_size: 17px
   code_font_size: 15px
   font_family: "'Aptos', 'Segoe UI Variable Text', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif"
-  code_font_family: "'Cascadia Code', 'JetBrains Mono', 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace"
+  code_font_family: "'JetBrains Mono', 'Cascadia Code', 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace"
 
 inject:
   head:
     - <link rel="stylesheet" href="/css/custom.css">
   bottom:
     - <script data-pjax src="/js/custom.js"></script>
+
 
 
