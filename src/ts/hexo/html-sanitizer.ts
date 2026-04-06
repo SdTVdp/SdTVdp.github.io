@@ -5,6 +5,7 @@ import { type ChildNode, type Element, type ParentNode, isComment, isTag, isText
 const ALLOWED_TAGS = new Set([
   "a",
   "abbr",
+  "article",
   "b",
   "blockquote",
   "br",
@@ -377,3 +378,4 @@ hexo.extend.filter.register("after_post_render", (data: HexoRenderable & { more?
 
   return data;
 });
+
