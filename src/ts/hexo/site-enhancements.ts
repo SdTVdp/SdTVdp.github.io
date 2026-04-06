@@ -1,4 +1,10 @@
+import { parse as parseFrontMatter } from "hexo-front-matter";
+import { slugize } from "hexo-util";
 import { optimizeSitePath } from "./_shared/image-pipeline";
+
+const defaultPostPermalinkFilter = require("hexo/dist/plugins/filter/post_permalink") as (
+  data: HexoRenderable
+) => string;
 import { getStickyValue, getTagNames, htmlToText, sortPosts, toArray } from "./_shared/post-utils";
 
 const asRenderableList = (name: "posts" | "pages"): HexoRenderable[] =>
@@ -53,6 +59,41 @@ const setEntryValue = (entry: HexoRenderable, key: string, value: unknown): bool
   return true;
 };
 
+const getFrontMatterSlug = (entry: HexoRenderable): string => {
+  const raw = String(entry?.raw || "");
+
+  if (!raw) {
+    return "";
+  }
+
+  try {
+    const parsed = parseFrontMatter(raw);
+    const slug = parsed?.slug;
+
+    if (slug == null || slug === "") {
+      return "";
+    }
+
+    return slugize(String(slug), {
+      transform: hexo.config.filename_case,
+    });
+  } catch {
+    return "";
+  }
+};
+
+const restoreFrontMatterSlug = (entry: HexoRenderable): boolean => {
+  if (!entry?.source || !String(entry.source).includes("_posts")) {
+    return false;
+  }
+
+  const slug = getFrontMatterSlug(entry);
+  if (!slug || entry.slug === slug) {
+    return false;
+  }
+
+  return setEntryValue(entry, "slug", slug);
+};
 const optimizeImageValue = async (value: string | string[] | false | undefined): Promise<typeof value> => {
   if (value === false || value === undefined) {
     return value;
@@ -122,6 +163,47 @@ const optimizeThemeImages = async (): Promise<void> => {
   }
 };
 
+const registerSlugAwarePostPermalink = (): void => {
+  const filterApi = hexo.extend.filter as unknown as {
+    list: (name: string) => Array<(...args: any[]) => any>;
+    unregister: (name: string, handler: (...args: any[]) => any) => void;
+    register: (name: string, handler: (this: unknown, data: HexoRenderable) => string, priority?: number) => void;
+  };
+  const filters = [...filterApi.list("post_permalink")];
+
+  for (const filter of filters) {
+    if (typeof filter === "function" && filter.name === "postPermalinkFilter") {
+      filterApi.unregister("post_permalink", filter);
+    }
+  }
+
+  filterApi.register(
+    "post_permalink",
+    function slugAwarePostPermalink(this: unknown, data: HexoRenderable): string {
+      const slug = getFrontMatterSlug(data);
+
+      if (!slug) {
+        return defaultPostPermalinkFilter.call(this, data);
+      }
+
+      const patchedData = {
+        id: data.id,
+        _id: data._id,
+        slug,
+        title: data.title,
+        date: data.date,
+        categories: data.categories,
+        __permalink: data.__permalink,
+      } as HexoRenderable;
+
+      return defaultPostPermalinkFilter.call(this, patchedData);
+    },
+    10
+  );
+};
+
+registerSlugAwarePostPermalink();
+
 hexo.extend.filter.register("before_post_render", async (data: HexoRenderable) => {
   syncExcerptToDescription(data);
   await optimizeEntryImages(data);
@@ -131,7 +213,14 @@ hexo.extend.filter.register("before_post_render", async (data: HexoRenderable) =
 hexo.extend.filter.register("before_generate", async () => {
   await optimizeThemeImages();
 
-  const entries = [...asRenderableList("posts"), ...asRenderableList("pages")];
+  const posts = asRenderableList("posts");
+  const pages = asRenderableList("pages");
+
+  for (const post of posts) {
+    restoreFrontMatterSlug(post);
+  }
+
+  const entries = [...posts, ...pages];
 
   for (const entry of entries) {
     await optimizeEntryImages(entry);

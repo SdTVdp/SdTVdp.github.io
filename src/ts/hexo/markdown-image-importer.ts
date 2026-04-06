@@ -78,6 +78,11 @@ const normalizeTarget = (value: unknown): string => {
   return trimmed.startsWith("<") && trimmed.endsWith(">") ? trimmed.slice(1, -1).trim() : trimmed;
 };
 
+const stripPresentationalFontTags = (content: string): string =>
+  content
+    .replace(/<font\b[^>]*>/gi, "")
+    .replace(/<\/font>/gi, "");
+
 const splitMarkdownDestination = (rawTarget: string): { url: string; suffix: string } => {
   const normalized = normalizeTarget(rawTarget);
   const titleMatch = normalized.match(/^((?:\\.|[^\s])(?:.*?))(?:\s+((["']).*?\3))?$/);
@@ -520,7 +525,7 @@ hexo.extend.filter.register("before_post_render", async (data: HexoRenderable) =
   }
 
   const context = toContext(data);
-  const original = String(data.content || "");
+  const original = stripPresentationalFontTags(String(data.content || ""));
 
   let rewritten = await rewriteObsidianImages(original, context);
   rewritten = await rewriteMarkdownImages(rewritten, context);

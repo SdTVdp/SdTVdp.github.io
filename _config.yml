@@ -11,7 +11,7 @@ timezone: Asia/Shanghai
 
 url: https://sdtvdp.github.io
 root: /
-permalink: posts/:title/
+permalink: posts/:slug/
 pretty_urls:
   trailing_index: false
   trailing_html: false
