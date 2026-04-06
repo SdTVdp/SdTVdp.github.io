@@ -1,4 +1,4 @@
-﻿import { optimizeSitePath } from "./_shared/image-pipeline";
+import { optimizeSitePath } from "./_shared/image-pipeline";
 import { getStickyValue, getTagNames, htmlToText, sortPosts, toArray } from "./_shared/post-utils";
 
 const asRenderableList = (name: "posts" | "pages"): HexoRenderable[] =>
@@ -132,40 +132,29 @@ hexo.extend.filter.register("before_generate", async () => {
   await optimizeThemeImages();
 
   const entries = [...asRenderableList("posts"), ...asRenderableList("pages")];
-  const saveTasks: Array<Promise<unknown>> = [];
 
   for (const entry of entries) {
-    let changed = syncExcerptToDescription(entry);
-    changed = (await optimizeEntryImages(entry)) || changed;
+    await optimizeEntryImages(entry);
+    syncExcerptToDescription(entry);
 
     const sticky = getStickyValue(entry);
     if (sticky > 0 && !entry.top) {
-      changed = setEntryValue(entry, "top", sticky) || changed;
-    }
-
-    if (changed && typeof entry.save === "function") {
-      saveTasks.push(entry.save());
+      setEntryValue(entry, "top", sticky);
     }
   }
-
-  await Promise.all(saveTasks);
 });
 
-const registerPostDescHelper = (): void => {
-  hexo.extend.helper.register("postDesc", (entry: HexoRenderable) => {
-    const result = buildPostDescription(entry);
+hexo.extend.helper.register("postDesc", (entry: HexoRenderable) => {
+  const result = buildPostDescription(entry);
 
-    if (entry && typeof entry === "object") {
-      entry.postDesc = result;
-    }
+  if (entry && typeof entry === "object") {
+    entry.postDesc = result;
+  }
 
-    return result;
-  });
-};
+  return result;
+});
 
 hexo.extend.helper.register("plain_text", (value: unknown) => htmlToText(value));
-registerPostDescHelper();
-hexo.on("generateBefore", registerPostDescHelper);
 hexo.extend.helper.register("sticky_value", (post: HexoRenderable) => getStickyValue(post));
 hexo.extend.helper.register("sorted_posts", (posts: HexoCollection<HexoRenderable>) => sortPosts(posts));
 hexo.extend.helper.register("post_summary", (post: HexoRenderable, limit = 136) =>

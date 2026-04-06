@@ -1,10 +1,10 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 (() => {
-    if (window.__sdtvdpCustomUiReady) {
+    const runtimeWindow = window;
+    if (runtimeWindow.__sdtvdpCustomUiReady) {
         return;
     }
-    window.__sdtvdpCustomUiReady = true;
+    runtimeWindow.__sdtvdpCustomUiReady = true;
     const clampChannel = (value) => Math.max(0, Math.min(255, Math.round(value)));
     const prefersReducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const bitmapCache = new Map();
@@ -325,8 +325,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
         }
         return getFallbackSeedColor(event.target);
     };
-    const nudgeColor = (baseColor, random) => {
-        const spread = 10 + Math.floor(random() * 10);
+    const nudgeColor = (baseColor, random, minSpread = 6, spreadRange = 6) => {
+        const spread = minSpread + Math.floor(random() * Math.max(1, spreadRange));
         const jitter = () => Math.floor(random() * (spread * 2 + 1)) - spread;
         return {
             r: clampChannel(baseColor.r + jitter()),
@@ -345,11 +345,33 @@ Object.defineProperty(exports, "__esModule", { value: true });
         const random = createSeededRandom(startedAt);
         const seedColor = await getSeedColor(event);
         const particleCount = 3 + Math.floor(random() * 8);
+        const lineCount = 3 + Math.floor(random() * 4);
         const burst = document.createElement("span");
         burst.className = "click-burst";
         burst.style.left = `${event.clientX}px`;
         burst.style.top = `${event.clientY}px`;
         let maxDuration = 0;
+        for (let index = 0; index < lineCount; index += 1) {
+            const line = document.createElement("span");
+            const angle = random() * Math.PI * 2;
+            const length = 56 + random() * 108;
+            const width = 2 + random() * 2.6;
+            const duration = 520 + random() * 280;
+            const delay = random() * 40;
+            const midStop = 42 + random() * 16;
+            const endColor = nudgeColor(seedColor, random, 10, 10);
+            line.className = "click-burst-line";
+            line.style.setProperty("--line-angle", `${angle}rad`);
+            line.style.setProperty("--line-length", `${length.toFixed(2)}px`);
+            line.style.setProperty("--line-width", `${width.toFixed(2)}px`);
+            line.style.setProperty("--line-duration", `${duration.toFixed(0)}ms`);
+            line.style.setProperty("--line-delay", `${delay.toFixed(0)}ms`);
+            line.style.setProperty("--line-mid-stop", `${midStop.toFixed(2)}%`);
+            line.style.setProperty("--line-start-rgb", `${seedColor.r}, ${seedColor.g}, ${seedColor.b}`);
+            line.style.setProperty("--line-end-rgb", `${endColor.r}, ${endColor.g}, ${endColor.b}`);
+            burst.appendChild(line);
+            maxDuration = Math.max(maxDuration, duration + delay);
+        }
         for (let index = 0; index < particleCount; index += 1) {
             const particle = document.createElement("span");
             const angle = random() * Math.PI * 2;
@@ -359,7 +381,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
             const size = 12 + random() * 33;
             const duration = 560 + random() * 420;
             const delay = random() * 70;
-            const color = nudgeColor(seedColor, random);
+            const color = nudgeColor(seedColor, random, 6, 6);
             particle.className = "click-burst-particle";
             particle.style.setProperty("--particle-size", `${size.toFixed(2)}px`);
             particle.style.setProperty("--particle-rgb", `${color.r}, ${color.g}, ${color.b}`);

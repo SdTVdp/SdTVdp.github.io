@@ -1,4 +1,4 @@
-﻿import fs from "node:fs/promises";
+import fs from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 
@@ -31,6 +31,14 @@ export const stripQueryAndHash = (value: unknown): string => String(value ?? "")
 export const isRemoteUrl = (value: unknown): boolean => /^https?:\/\//i.test(String(value ?? "").trim());
 export const isDataUrl = (value: unknown): boolean => /^data:/i.test(String(value ?? "").trim());
 export const isSiteAbsolute = (value: unknown): boolean => String(value ?? "").trim().startsWith("/");
+export const getWorkspaceRoot = (): string => path.resolve(getHexoContext().base_dir || process.cwd());
+export const isWithinDirectory = (target: string, root: string): boolean => {
+  const resolvedTarget = path.resolve(target);
+  const resolvedRoot = path.resolve(root);
+  const relative = path.relative(resolvedRoot, resolvedTarget);
+
+  return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
+};
 
 export const ensureDir = async (target: string): Promise<void> => {
   await fs.mkdir(target, { recursive: true });

@@ -2,6 +2,7 @@
 title: "2025_TGCTF"
 date: 2025-04-12 9:00:00
 excerpt: "TGCTF 与 HZNUCTF 部分逆向题记录，包含 base64、Unity、z3 和 XTEA 题目。"
+slug: 2025TGReWp
 cover: /uploads/backgrounds/TGctfCover.png
 top_img: /uploads/backgrounds/TGctfTop.png
 tags:

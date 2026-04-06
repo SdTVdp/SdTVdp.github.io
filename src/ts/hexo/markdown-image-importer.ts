@@ -1,12 +1,15 @@
-﻿import crypto from "node:crypto";
+import crypto from "node:crypto";
 import type { Dirent } from "node:fs";
 import fs from "node:fs/promises";
+import net from "node:net";
 import path from "node:path";
 import {
   ensureDir,
+  getWorkspaceRoot,
   isDataUrl,
   isRemoteUrl,
   isSiteAbsolute,
+  isWithinDirectory,
   normalizeSlashes,
   optimizeImageAtPath,
   optimizeSitePath,
@@ -17,6 +20,7 @@ import {
 
 const IMPORT_ROOT = "uploads/imported";
 const SOURCE_IMPORT_ROOT = path.join(hexo.source_dir, IMPORT_ROOT);
+const MAX_REMOTE_IMAGE_BYTES = 20 * 1024 * 1024;
 const SEARCHABLE_IMAGE_EXTENSIONS = new Set([
   ".apng",
   ".avif",
@@ -124,6 +128,106 @@ const resolveExtensionFromType = (contentType: string | null): string => {
 const getRemoteAssetBase = (url: string): string =>
   crypto.createHash("sha1").update(url).digest("hex").slice(0, 16);
 
+const hasSupportedImageExtension = (filePath: string): boolean =>
+  SEARCHABLE_IMAGE_EXTENSIONS.has(path.extname(filePath).toLowerCase());
+
+const isUnsafeIpv4 = (hostname: string): boolean => {
+  const parts = hostname.split(".").map((segment) => Number.parseInt(segment, 10));
+  if (parts.length !== 4 || parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255)) {
+    return true;
+  }
+
+  const [first, second] = parts;
+  return (
+    first === 0 ||
+    first === 10 ||
+    first === 127 ||
+    (first === 169 && second === 254) ||
+    (first === 172 && second >= 16 && second <= 31) ||
+    (first === 192 && second === 168)
+  );
+};
+
+const isUnsafeIpv6 = (hostname: string): boolean => {
+  const normalized = hostname.toLowerCase();
+  return (
+    normalized === "::1" ||
+    normalized === "::" ||
+    normalized.startsWith("fc") ||
+    normalized.startsWith("fd") ||
+    normalized.startsWith("fe8") ||
+    normalized.startsWith("fe9") ||
+    normalized.startsWith("fea") ||
+    normalized.startsWith("feb")
+  );
+};
+
+const assertSafeRemoteUrl = (input: string): URL => {
+  const parsed = new URL(input);
+  const hostname = parsed.hostname.toLowerCase();
+  const ipVersion = net.isIP(hostname);
+
+  if (!/^https?:$/i.test(parsed.protocol)) {
+    throw new Error(`unsupported protocol: ${parsed.protocol}`);
+  }
+
+  if (parsed.username || parsed.password) {
+    throw new Error("credentialed remote URLs are not allowed");
+  }
+
+  if (
+    hostname === "localhost" ||
+    hostname.endsWith(".localhost") ||
+    hostname.endsWith(".local") ||
+    (ipVersion === 4 && isUnsafeIpv4(hostname)) ||
+    (ipVersion === 6 && isUnsafeIpv6(hostname))
+  ) {
+    throw new Error(`blocked remote host: ${hostname}`);
+  }
+
+  return parsed;
+};
+
+const readResponseBuffer = async (response: Response, maxBytes: number): Promise<Buffer> => {
+  const contentLength = Number.parseInt(response.headers.get("content-length") || "", 10);
+
+  if (Number.isFinite(contentLength) && contentLength > maxBytes) {
+    throw new Error(`remote image too large: ${contentLength} bytes`);
+  }
+
+  if (!response.body) {
+    const buffer = Buffer.from(await response.arrayBuffer());
+    if (buffer.length > maxBytes) {
+      throw new Error(`remote image too large: ${buffer.length} bytes`);
+    }
+
+    return buffer;
+  }
+
+  const reader = response.body.getReader();
+  const chunks: Buffer[] = [];
+  let total = 0;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) {
+      break;
+    }
+
+    const chunk = Buffer.from(value);
+    total += chunk.length;
+
+    if (total > maxBytes) {
+      await reader.cancel().catch(() => undefined);
+      throw new Error(`remote image too large: ${total} bytes`);
+    }
+
+    chunks.push(chunk);
+  }
+
+  return Buffer.concat(chunks, total);
+};
+
 const listExistingRemoteCandidates = async (directory: string, baseName: string): Promise<string[]> => {
   try {
     const entries = await fs.readdir(directory, { withFileTypes: true });
@@ -187,6 +291,16 @@ const buildSourceAssetIndex = async (): Promise<IndexedImageMap> => {
   return sourceAssetIndexPromise;
 };
 
+const getAllowedLocalRoots = (context: ImportContext): string[] => [
+  context.postDirectory,
+  context.postAssetDirectory,
+  hexo.source_dir,
+  getWorkspaceRoot(),
+];
+
+const isAllowedLocalAssetPath = (candidate: string, context: ImportContext): boolean =>
+  getAllowedLocalRoots(context).some((root) => isWithinDirectory(candidate, root));
+
 const resolveLocalImageSource = async (rawTarget: string, context: ImportContext): Promise<string | null> => {
   const cleaned = stripQueryAndHash(
     decodePathLike(rawTarget)
@@ -207,6 +321,10 @@ const resolveLocalImageSource = async (rawTarget: string, context: ImportContext
   }
 
   for (const candidate of candidates) {
+    if (!hasSupportedImageExtension(candidate) || !isAllowedLocalAssetPath(candidate, context)) {
+      continue;
+    }
+
     try {
       const stats = await fs.stat(candidate);
       if (stats.isFile()) {
@@ -224,7 +342,7 @@ const resolveLocalImageSource = async (rawTarget: string, context: ImportContext
 
   const index = await buildSourceAssetIndex();
   const matches = index.get(basename) || [];
-  return matches[0] || null;
+  return matches.find((match) => isAllowedLocalAssetPath(match, context)) || null;
 };
 
 const importRemoteAsset = async (url: string, context: ImportContext): Promise<string> => {
@@ -237,13 +355,14 @@ const importRemoteAsset = async (url: string, context: ImportContext): Promise<s
     const directory = path.join(SOURCE_IMPORT_ROOT, context.assetScope);
     await ensureDir(directory);
 
-    const baseName = getRemoteAssetBase(url);
+    const parsedUrl = assertSafeRemoteUrl(url);
+    const baseName = getRemoteAssetBase(parsedUrl.toString());
     const existing = await listExistingRemoteCandidates(directory, baseName);
     if (existing[0]) {
       return existing[0];
     }
 
-    const response = await fetch(url, {
+    const response = await fetch(parsedUrl, {
       signal: AbortSignal.timeout(20000),
       headers: {
         "user-agent": "sdtvdp-hexo-image-importer",
@@ -259,9 +378,8 @@ const importRemoteAsset = async (url: string, context: ImportContext): Promise<s
       throw new Error(`unsupported content-type: ${contentType}`);
     }
 
-    const buffer = Buffer.from(await response.arrayBuffer());
-    const parsed = new URL(url);
-    const urlExtension = path.extname(parsed.pathname || "").toLowerCase();
+    const buffer = await readResponseBuffer(response, MAX_REMOTE_IMAGE_BYTES);
+    const urlExtension = path.extname(parsedUrl.pathname || "").toLowerCase();
     const extension = SEARCHABLE_IMAGE_EXTENSIONS.has(urlExtension)
       ? urlExtension
       : resolveExtensionFromType(contentType);
@@ -270,7 +388,10 @@ const importRemoteAsset = async (url: string, context: ImportContext): Promise<s
 
     await fs.writeFile(absolutePath, buffer);
     return absolutePath;
-  })();
+  })().catch((error) => {
+    remoteAssetMemo.delete(memoKey);
+    throw error;
+  });
 
   remoteAssetMemo.set(memoKey, task);
   return task;

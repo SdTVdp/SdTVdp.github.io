@@ -1,5 +1,6 @@
 @echo off
 setlocal
+chcp 65001 >nul
 set "NEED_PAUSE=0"
 set "COMMIT_MSG="
 
@@ -8,7 +9,7 @@ if "%~1"=="" set "NEED_PAUSE=1"
 cd /d "%~dp0"
 
 echo [1/5] Current git status:
-git status --short
+git -c core.quotepath=false status --short
 if errorlevel 1 goto :fail
 
 if not "%~1"=="" (
@@ -22,7 +23,9 @@ if not "%~1"=="" (
 
 :after_args
 if not defined COMMIT_MSG (
-  set /p COMMIT_MSG=Enter commit message: 
+  echo.
+  echo No commit message was passed in. The script is waiting for you to type one.
+  set /p "COMMIT_MSG=Enter commit message: "
 )
 
 :trim_leading

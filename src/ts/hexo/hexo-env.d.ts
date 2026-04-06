@@ -1,4 +1,4 @@
-﻿declare type HexoCollection<T> =
+declare type HexoCollection<T> =
   | T[]
   | {
       data?: T[];
@@ -46,6 +46,7 @@ declare interface HexoLocals {
 declare interface HexoContext {
   config: Record<string, any>;
   theme: { config: Record<string, any> };
+  base_dir: string;
   source_dir: string;
   extend: {
     filter: {
