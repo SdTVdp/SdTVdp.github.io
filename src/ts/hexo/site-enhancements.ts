@@ -145,6 +145,34 @@ const buildPostDescription = (entry: HexoRenderable): string => {
   return content.slice(0, length);
 };
 
+const buildCustomAssetVersion = (): string => {
+  const sha = String(process.env.GITHUB_SHA || "").trim();
+  if (sha) {
+    return sha.slice(0, 8);
+  }
+
+  const runNumber = String(process.env.GITHUB_RUN_NUMBER || "").trim();
+  if (runNumber) {
+    return `run${runNumber}`;
+  }
+
+  return new Date()
+    .toISOString()
+    .replace(/[-:.TZ]/g, "")
+    .slice(0, 14);
+};
+
+const CUSTOM_ASSET_VERSION = buildCustomAssetVersion();
+
+const withVersionedCustomAssets = (html: string): string =>
+  html
+    .replace(/href=(["'])\/css\/custom\.css(?:\?[^"'<>]*)?\1/g, (_match, quote: string) => {
+      return `href=${quote}/css/custom.css?v=${CUSTOM_ASSET_VERSION}${quote}`;
+    })
+    .replace(/src=(["'])\/js\/custom\.js(?:\?[^"'<>]*)?\1/g, (_match, quote: string) => {
+      return `src=${quote}/js/custom.js?v=${CUSTOM_ASSET_VERSION}${quote}`;
+    });
+
 const optimizeThemeImages = async (): Promise<void> => {
   const themeConfig = hexo.theme.config;
   const imageKeys = ["default_top_img", "index_img", "archive_img", "tag_img"] as const;
@@ -232,6 +260,8 @@ hexo.extend.filter.register("before_generate", async () => {
     }
   }
 });
+
+hexo.extend.filter.register("after_render:html", (html: string) => withVersionedCustomAssets(html));
 
 hexo.extend.helper.register("postDesc", (entry: HexoRenderable) => {
   const result = buildPostDescription(entry);

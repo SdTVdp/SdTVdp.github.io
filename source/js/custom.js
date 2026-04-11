@@ -993,7 +993,7 @@
                 sunbeams: [],
                 frameId: null,
                 lastTimestamp: 0,
-                nextSpawnAt: performance.now() + 400,
+                nextSpawnAt: performance.now() + 120,
                 pixelRatio: 1,
             };
         }
@@ -1001,8 +1001,12 @@
             document.body.appendChild(ambientLayerState.canvas);
         }
         resizeAmbientCanvas(ambientLayerState);
+        const now = performance.now();
+        if (ambientLayerState.meteors.length === 0 && ambientLayerState.sunbeams.length === 0) {
+            scheduleAmbientSpawn(ambientLayerState, now);
+        }
         if (ambientLayerState.frameId === null) {
-            ambientLayerState.lastTimestamp = performance.now();
+            ambientLayerState.lastTimestamp = now;
             ambientLayerState.frameId = window.requestAnimationFrame(tickAmbientEffects);
         }
         if (ambientEffectsBound) {
