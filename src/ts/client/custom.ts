@@ -31,6 +31,50 @@ interface DrawRectResult {
   offsetY: number;
 }
 
+interface AmbientMeteor {
+  x: number;
+  y: number;
+  angle: number;
+  speed: number;
+  speedPulse: number;
+  speedPhase: number;
+  length: number;
+  width: number;
+  opacity: number;
+  tint: SampledColor;
+  age: number;
+  duration: number;
+}
+
+interface AmbientSunbeam {
+  x: number;
+  y: number;
+  radiusX: number;
+  radiusY: number;
+  driftX: number;
+  driftY: number;
+  opacity: number;
+  age: number;
+  duration: number;
+}
+
+interface AmbientEffectLayerState {
+  canvas: HTMLCanvasElement;
+  context: CanvasRenderingContext2D;
+  meteors: AmbientMeteor[];
+  sunbeams: AmbientSunbeam[];
+  frameId: number | null;
+  lastTimestamp: number;
+  nextSpawnAt: number;
+  pixelRatio: number;
+}
+
+interface SiteBackdropLayerState {
+  root: HTMLDivElement;
+  image: HTMLDivElement;
+  veil: HTMLDivElement;
+}
+
 (() => {
   const runtimeWindow = window as CustomWindow;
 
@@ -75,6 +119,10 @@ interface DrawRectResult {
   };
   const bitmapCache = new Map<string, Promise<BitmapSample | null>>();
   let themeObserverBound = false;
+  let ambientEffectsBound = false;
+  let ambientLayerState: AmbientEffectLayerState | null = null;
+  let siteBackdropLayer: SiteBackdropLayerState | null = null;
+  const siteBackdropProbeCache = new Map<string, Promise<string | null>>();
 
   const createSeededRandom = (seed: number): (() => number) => {
     let state = seed >>> 0;
@@ -447,6 +495,68 @@ interface DrawRectResult {
     return readPixel(bitmap, imageX, imageY);
   };
 
+  const blendSeedSample = (foreground: SampledColor, background: SampledColor): SampledColor => {
+    const alpha = Math.max(0, Math.min(1, foreground.a));
+    const inverseAlpha = 1 - alpha;
+
+    return {
+      r: clampChannel(foreground.r * alpha + background.r * inverseAlpha),
+      g: clampChannel(foreground.g * alpha + background.g * inverseAlpha),
+      b: clampChannel(foreground.b * alpha + background.b * inverseAlpha),
+      a: 1,
+    };
+  };
+
+  const interpolateSampledColor = (from: SampledColor, to: SampledColor, ratio: number): SampledColor => {
+    const amount = Math.max(0, Math.min(1, ratio));
+    const inverse = 1 - amount;
+
+    return {
+      r: clampChannel(from.r * inverse + to.r * amount),
+      g: clampChannel(from.g * inverse + to.g * amount),
+      b: clampChannel(from.b * inverse + to.b * amount),
+      a: Math.max(0, Math.min(1, from.a * inverse + to.a * amount)),
+    };
+  };
+
+  const sampleSiteBackdropVisibleColor = async (event: PointerEvent): Promise<SampledColor | null> => {
+    if (!siteBackdropLayer || siteBackdropLayer.root.hidden) {
+      return null;
+    }
+
+    const imageColor = await sampleBackgroundImageColor(siteBackdropLayer.image, event);
+    if (!imageColor || imageColor.a <= 0.01) {
+      return null;
+    }
+
+    const rootStyle = window.getComputedStyle(siteBackdropLayer.root);
+    const imageStyle = window.getComputedStyle(siteBackdropLayer.image);
+    const rootColor =
+      parseColor(rootStyle.backgroundColor) ||
+      parseColor(window.getComputedStyle(document.documentElement).getPropertyValue("--global-bg")) ||
+      { r: 23, g: 76, b: 128, a: 1 };
+    const imageOpacity = Math.max(0, Math.min(1, Number.parseFloat(imageStyle.opacity || "1") || 1));
+    const resolvedImage =
+      imageOpacity >= 0.999
+        ? { r: imageColor.r, g: imageColor.g, b: imageColor.b, a: 1 }
+        : blendSeedSample({ ...imageColor, a: imageColor.a * imageOpacity }, rootColor);
+
+    const overlayStart = parseColor(rootStyle.getPropertyValue("--site-background-overlay-start"));
+    const overlayEnd = parseColor(rootStyle.getPropertyValue("--site-background-overlay-end"));
+
+    if (!overlayStart && !overlayEnd) {
+      return resolvedImage;
+    }
+
+    const viewportHeight = Math.max(window.innerHeight, 1);
+    const verticalRatio = Math.max(0, Math.min(1, event.clientY / viewportHeight));
+    const overlay = overlayStart && overlayEnd
+      ? interpolateSampledColor(overlayStart, overlayEnd, verticalRatio)
+      : (overlayStart || overlayEnd)!;
+
+    return blendSeedSample(overlay, resolvedImage);
+  };
+
   const getSeedColor = async (event: PointerEvent): Promise<SampledColor> => {
     let current = event.target instanceof Element ? event.target : null;
 
@@ -462,6 +572,11 @@ interface DrawRectResult {
       }
 
       current = current.parentElement;
+    }
+
+    const backdropColor = await sampleSiteBackdropVisibleColor(event);
+    if (backdropColor && backdropColor.a > 0.18) {
+      return backdropColor;
     }
 
     return getFallbackSeedColor(event.target);
@@ -765,6 +880,7 @@ interface DrawRectResult {
 
     themeObserverBound = true;
     const observer = new MutationObserver(() => {
+      void ensureSiteBackdropLayer();
       window.requestAnimationFrame(() => adaptInlineTextContrast());
     });
 
@@ -781,9 +897,474 @@ interface DrawRectResult {
     }
   };
 
+  const easeOutCubic = (value: number): number => {
+    const clamped = Math.max(0, Math.min(1, value));
+    return 1 - (1 - clamped) ** 3;
+  };
+
+  const easeInOutSine = (value: number): number => {
+    const clamped = Math.max(0, Math.min(1, value));
+    return -(Math.cos(Math.PI * clamped) - 1) / 2;
+  };
+
+  const getAmbientCanvasSize = (): { width: number; height: number; pixelRatio: number } => {
+    const pixelRatio = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    return {
+      width: Math.max(window.innerWidth, 1),
+      height: Math.max(window.innerHeight, 1),
+      pixelRatio,
+    };
+  };
+
+  const getAmbientSeededRandom = (salt = 0): (() => number) =>
+    createSeededRandom((Date.now() ^ Math.floor(performance.now() * 1000) ^ Math.floor(window.scrollY) ^ salt) >>> 0);
+
+  const getNormalizedPathname = (): string => {
+    const pathname = window.location.pathname || "/";
+    return pathname.endsWith("/") ? pathname : `${pathname}/`;
+  };
+
+  const isBackdropSurfacePage = (): boolean => {
+    const pathname = getNormalizedPathname();
+    const exactMatches = new Set<string>(["/", "/about/"]);
+
+    if (exactMatches.has(pathname)) {
+      return true;
+    }
+
+    return ["/blog/", "/posts/", "/archives/", "/tags/", "/categories/"].some(
+      (prefix) => pathname === prefix || pathname.startsWith(prefix)
+    );
+  };
+
+  const getSiteBackdropCandidates = (): string[] => {
+    const suffix = isDarkTheme() ? "dark" : "light";
+
+    return [
+      `/uploads/backgrounds/blog-body-background-${suffix}.avif`,
+      `/uploads/backgrounds/blog-body-background-${suffix}.webp`,
+      `/uploads/backgrounds/blog-body-background-${suffix}.png`,
+      `/uploads/backgrounds/blog-body-background-${suffix}.jpg`,
+      `/uploads/backgrounds/blog-body-background-${suffix}.jpeg`,
+      `/uploads/backgrounds/blog-body-background-${suffix}.gif`,
+    ];
+  };
+
+  const probeImageExists = (source: string): Promise<boolean> =>
+    new Promise((resolve) => {
+      const image = new Image();
+      const probeSource = `${source}${source.includes("?") ? "&" : "?"}v=${Date.now()}`;
+
+      image.onload = () => resolve(true);
+      image.onerror = () => resolve(false);
+      image.decoding = "async";
+      image.src = probeSource;
+    });
+
+  const resolveSiteBackdropUrl = async (): Promise<string | null> => {
+    const cacheKey = isDarkTheme() ? "dark" : "light";
+    const cached = siteBackdropProbeCache.get(cacheKey);
+
+    if (cached) {
+      return cached;
+    }
+
+    const probe = (async () => {
+      for (const candidate of getSiteBackdropCandidates()) {
+        if (await probeImageExists(candidate)) {
+          return candidate;
+        }
+      }
+
+      return null;
+    })();
+
+    siteBackdropProbeCache.set(cacheKey, probe);
+    return probe;
+  };
+
+  const resizeAmbientCanvas = (state: AmbientEffectLayerState): void => {
+    const { width, height, pixelRatio } = getAmbientCanvasSize();
+    state.pixelRatio = pixelRatio;
+
+    if (state.canvas.width === Math.round(width * pixelRatio) && state.canvas.height === Math.round(height * pixelRatio)) {
+      return;
+    }
+
+    state.canvas.width = Math.round(width * pixelRatio);
+    state.canvas.height = Math.round(height * pixelRatio);
+    state.canvas.style.width = `${width}px`;
+    state.canvas.style.height = `${height}px`;
+    state.context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+  };
+
+  const removeAmbientLayer = (): void => {
+    if (!ambientLayerState) {
+      return;
+    }
+
+    if (ambientLayerState.frameId !== null) {
+      window.cancelAnimationFrame(ambientLayerState.frameId);
+    }
+
+    ambientLayerState.canvas.remove();
+    ambientLayerState = null;
+  };
+
+  const ensureSiteBackdropLayer = async (): Promise<void> => {
+    if (!isBackdropSurfacePage()) {
+      if (siteBackdropLayer) {
+        siteBackdropLayer.root.hidden = true;
+      }
+
+      return;
+    }
+
+    if (!siteBackdropLayer) {
+      const root = document.createElement("div");
+      const image = document.createElement("div");
+      const veil = document.createElement("div");
+
+      root.className = "site-background-root";
+      root.setAttribute("aria-hidden", "true");
+      root.hidden = true;
+
+      image.className = "site-background-image";
+      veil.className = "site-background-veil";
+
+      root.appendChild(image);
+      root.appendChild(veil);
+      document.body.prepend(root);
+
+      siteBackdropLayer = { root, image, veil };
+    }
+
+    const resolved = await resolveSiteBackdropUrl();
+
+    if (!siteBackdropLayer) {
+      return;
+    }
+
+    if (!resolved) {
+      siteBackdropLayer.root.hidden = true;
+      siteBackdropLayer.image.style.removeProperty("--site-backdrop-image");
+      return;
+    }
+
+    siteBackdropLayer.root.hidden = false;
+    siteBackdropLayer.image.style.setProperty("--site-backdrop-image", `url("${resolved}")`);
+  };
+
+  const spawnAmbientMeteor = (state: AmbientEffectLayerState, now: number): void => {
+    const random = getAmbientSeededRandom(Math.floor(now));
+    const width = state.canvas.width / state.pixelRatio;
+    const height = state.canvas.height / state.pixelRatio;
+    const angle = Math.atan2(0.4, -1) + (random() - 0.5) * 0.12;
+    const fromRightEdge = random() < 0.58;
+    const tintPalette: SampledColor[] = [
+      { r: 220, g: 236, b: 255, a: 1 },
+      { r: 233, g: 224, b: 255, a: 1 },
+      { r: 255, g: 232, b: 244, a: 1 },
+      { r: 226, g: 248, b: 240, a: 1 },
+    ];
+    const tint = tintPalette[Math.floor(random() * tintPalette.length)] || tintPalette[0];
+
+    const originX = fromRightEdge
+      ? width + 120 + random() * 180
+      : width * (0.52 + random() * 0.48);
+    const originY = fromRightEdge
+      ? height * (0.02 + random() * 0.46)
+      : -120 - random() * 90;
+
+    state.meteors.push({
+      x: originX,
+      y: originY,
+      angle,
+      speed: 0.96 + random() * 0.82,
+      speedPulse: 0.14 + random() * 0.2,
+      speedPhase: random() * Math.PI * 2,
+      length: 260 + random() * 360,
+      width: 2.4 + random() * 3.6,
+      opacity: 0.28 + random() * 0.22,
+      tint,
+      age: 0,
+      duration: 1080 + random() * 760,
+    });
+  };
+
+  const spawnAmbientSunbeam = (state: AmbientEffectLayerState, now: number): void => {
+    const random = getAmbientSeededRandom(Math.floor(now) ^ 0x9e3779b9);
+    const width = state.canvas.width / state.pixelRatio;
+    const height = state.canvas.height / state.pixelRatio;
+
+    state.sunbeams.push({
+      x: width * (0.1 + random() * 0.8),
+      y: height * (0.08 + random() * 0.44),
+      radiusX: 280 + random() * 420,
+      radiusY: 200 + random() * 300,
+      driftX: -36 + random() * 72,
+      driftY: -20 + random() * 40,
+      opacity: 0.05 + random() * 0.04,
+      age: 0,
+      duration: 3600 + random() * 3400,
+    });
+  };
+
+  const scheduleAmbientSpawn = (state: AmbientEffectLayerState, now: number): void => {
+    const random = getAmbientSeededRandom(Math.floor(now) ^ 0x85ebca6b);
+
+    if (isDarkTheme()) {
+      spawnAmbientMeteor(state, now);
+      state.nextSpawnAt = now + 260 + random() * 380;
+      return;
+    }
+
+    spawnAmbientSunbeam(state, now);
+    state.nextSpawnAt = now + 700 + random() * 1260;
+  };
+
+  const drawAmbientMeteor = (
+    context: CanvasRenderingContext2D,
+    meteor: AmbientMeteor,
+    width: number,
+    height: number
+  ): void => {
+    const progress = meteor.age / meteor.duration;
+
+    if (progress >= 1 || meteor.x - meteor.length > width + 80 || meteor.y < -80 || meteor.y > height + 80) {
+      return;
+    }
+
+    const fade = Math.sin(progress * Math.PI);
+    const tint = meteor.tint;
+
+    context.save();
+    context.translate(meteor.x, meteor.y);
+    context.rotate(meteor.angle);
+    context.globalCompositeOperation = "screen";
+    context.globalAlpha = meteor.opacity * (0.45 + easeOutCubic(Math.min(progress * 1.3, 1)) * 0.55) * fade;
+
+    const trail = context.createLinearGradient(-meteor.length, 0, 0, 0);
+    trail.addColorStop(0, "rgba(255, 255, 255, 0)");
+    trail.addColorStop(0.26, `rgba(${tint.r}, ${tint.g}, ${tint.b}, 0.05)`);
+    trail.addColorStop(0.62, `rgba(${tint.r}, ${tint.g}, ${tint.b}, 0.2)`);
+    trail.addColorStop(0.82, `rgba(${tint.r}, ${tint.g}, ${tint.b}, 0.52)`);
+    trail.addColorStop(0.94, "rgba(255, 255, 255, 0.82)");
+    trail.addColorStop(1, "rgba(255, 255, 255, 0.95)");
+
+    context.strokeStyle = trail;
+    context.lineWidth = meteor.width;
+    context.lineCap = "round";
+    context.shadowColor = `rgba(${tint.r}, ${tint.g}, ${tint.b}, 0.5)`;
+    context.shadowBlur = 28;
+    context.beginPath();
+    context.moveTo(-meteor.length, 0);
+    context.lineTo(0, 0);
+    context.stroke();
+
+    context.strokeStyle = `rgba(${tint.r}, ${tint.g}, ${tint.b}, 0.16)`;
+    context.lineWidth = meteor.width * 2.6;
+    context.shadowColor = `rgba(${tint.r}, ${tint.g}, ${tint.b}, 0.26)`;
+    context.shadowBlur = 42;
+    context.beginPath();
+    context.moveTo(-meteor.length * 0.86, 0);
+    context.lineTo(-meteor.length * 0.08, 0);
+    context.stroke();
+
+    context.fillStyle = "rgba(255, 255, 255, 0.95)";
+    context.shadowColor = "rgba(255, 255, 255, 0.72)";
+    context.shadowBlur = 34;
+    context.beginPath();
+    context.arc(0, 0, meteor.width * 1.9, 0, Math.PI * 2);
+    context.fill();
+    context.restore();
+  };
+
+  const drawAmbientSunbeam = (context: CanvasRenderingContext2D, sunbeam: AmbientSunbeam): void => {
+    const progress = sunbeam.age / sunbeam.duration;
+
+    if (progress >= 1) {
+      return;
+    }
+
+    const fade = Math.sin(progress * Math.PI);
+    const centerX = sunbeam.x + sunbeam.driftX * easeInOutSine(progress);
+    const centerY = sunbeam.y + sunbeam.driftY * easeInOutSine(progress);
+
+    context.save();
+    context.translate(centerX, centerY);
+    context.scale(1, sunbeam.radiusY / sunbeam.radiusX);
+    context.globalCompositeOperation = "screen";
+    context.globalAlpha = sunbeam.opacity * fade;
+
+    const glow = context.createRadialGradient(0, 0, 0, 0, 0, sunbeam.radiusX);
+    glow.addColorStop(0, "rgba(255, 248, 216, 0.36)");
+    glow.addColorStop(0.24, "rgba(255, 247, 227, 0.18)");
+    glow.addColorStop(0.58, "rgba(255, 255, 255, 0.08)");
+    glow.addColorStop(1, "rgba(255, 255, 255, 0)");
+
+    context.fillStyle = glow;
+    context.beginPath();
+    context.arc(0, 0, sunbeam.radiusX, 0, Math.PI * 2);
+    context.fill();
+
+    const warmCore = context.createRadialGradient(0, 0, 0, 0, 0, sunbeam.radiusX * 0.56);
+    warmCore.addColorStop(0, "rgba(255, 252, 233, 0.18)");
+    warmCore.addColorStop(0.5, "rgba(255, 246, 214, 0.08)");
+    warmCore.addColorStop(1, "rgba(255, 255, 255, 0)");
+    context.fillStyle = warmCore;
+    context.beginPath();
+    context.arc(0, 0, sunbeam.radiusX * 0.56, 0, Math.PI * 2);
+    context.fill();
+    context.restore();
+  };
+
+  const renderAmbientEffects = (state: AmbientEffectLayerState): void => {
+    const width = state.canvas.width / state.pixelRatio;
+    const height = state.canvas.height / state.pixelRatio;
+
+    state.context.clearRect(0, 0, width, height);
+
+    if (isDarkTheme()) {
+      state.meteors.forEach((meteor) => drawAmbientMeteor(state.context, meteor, width, height));
+      return;
+    }
+
+    state.sunbeams.forEach((sunbeam) => drawAmbientSunbeam(state.context, sunbeam));
+  };
+
+  const tickAmbientEffects = (timestamp: number): void => {
+    if (!ambientLayerState) {
+      return;
+    }
+
+    const state = ambientLayerState;
+    const delta = state.lastTimestamp ? Math.min(timestamp - state.lastTimestamp, 48) : 16;
+    state.lastTimestamp = timestamp;
+
+    resizeAmbientCanvas(state);
+
+    if (prefersReducedMotion()) {
+      removeAmbientLayer();
+      return;
+    }
+
+    if (document.hidden) {
+      state.frameId = window.requestAnimationFrame(tickAmbientEffects);
+      return;
+    }
+
+    if (isDarkTheme()) {
+      state.sunbeams.length = 0;
+    } else {
+      state.meteors.length = 0;
+    }
+
+    while (timestamp >= state.nextSpawnAt) {
+      scheduleAmbientSpawn(state, state.nextSpawnAt);
+    }
+
+    state.meteors = state.meteors
+      .map((meteor) => {
+        const nextAge = meteor.age + delta;
+        const wave = 1 + Math.sin(meteor.speedPhase + nextAge * 0.012) * meteor.speedPulse;
+        const currentSpeed = meteor.speed * wave;
+
+        return {
+          ...meteor,
+          age: nextAge,
+          x: meteor.x + Math.cos(meteor.angle) * currentSpeed * delta,
+          y: meteor.y + Math.sin(meteor.angle) * currentSpeed * delta,
+        };
+      })
+      .filter((meteor) => meteor.age < meteor.duration);
+
+    state.sunbeams = state.sunbeams
+      .map((sunbeam) => ({
+        ...sunbeam,
+        age: sunbeam.age + delta,
+      }))
+      .filter((sunbeam) => sunbeam.age < sunbeam.duration);
+
+    renderAmbientEffects(state);
+    state.frameId = window.requestAnimationFrame(tickAmbientEffects);
+  };
+
+  const ensureAmbientEffectsLayer = (): void => {
+    if (prefersReducedMotion()) {
+      removeAmbientLayer();
+      return;
+    }
+
+    if (!ambientLayerState) {
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
+
+      if (!context) {
+        return;
+      }
+
+      canvas.className = "ambient-effects-layer";
+      canvas.setAttribute("aria-hidden", "true");
+
+      ambientLayerState = {
+        canvas,
+        context,
+        meteors: [],
+        sunbeams: [],
+        frameId: null,
+        lastTimestamp: 0,
+        nextSpawnAt: performance.now() + 400,
+        pixelRatio: 1,
+      };
+    }
+
+    if (!document.body.contains(ambientLayerState.canvas)) {
+      document.body.appendChild(ambientLayerState.canvas);
+    }
+
+    resizeAmbientCanvas(ambientLayerState);
+
+    if (ambientLayerState.frameId === null) {
+      ambientLayerState.lastTimestamp = performance.now();
+      ambientLayerState.frameId = window.requestAnimationFrame(tickAmbientEffects);
+    }
+
+    if (ambientEffectsBound) {
+      return;
+    }
+
+    ambientEffectsBound = true;
+
+    window.addEventListener("resize", () => {
+      if (ambientLayerState) {
+        resizeAmbientCanvas(ambientLayerState);
+      }
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (!ambientLayerState) {
+        return;
+      }
+
+      if (document.hidden) {
+        ambientLayerState.context.clearRect(
+          0,
+          0,
+          ambientLayerState.canvas.width / ambientLayerState.pixelRatio,
+          ambientLayerState.canvas.height / ambientLayerState.pixelRatio
+        );
+      } else {
+        ambientLayerState.lastTimestamp = performance.now();
+      }
+    });
+  };
+
   const activateUiEnhancements = (): void => {
     normalizeMailtoLinks();
     observeThemeChanges();
+    void ensureSiteBackdropLayer();
+    ensureAmbientEffectsLayer();
     window.requestAnimationFrame(() => adaptInlineTextContrast());
   };
 

@@ -1,0 +1,40 @@
+
+> minimal-cascade-hexo@0.1.0 server
+> npm run compile && hexo clean && node tools/run-hexo-server.js --port 4001
+
+
+> minimal-cascade-hexo@0.1.0 compile
+> npm run compile:hexo && npm run compile:client
+
+
+> minimal-cascade-hexo@0.1.0 compile:hexo
+> tsc -p tsconfig.hexo.json
+
+
+> minimal-cascade-hexo@0.1.0 compile:client
+> tsc -p tsconfig.client.json
+
+[32mINFO [39m Validating config
+[32mINFO [39m 
+  ===================================================================
+      #####  #    # ##### ##### ###### #####  ###### #      #   #
+      #    # #    #   #     #   #      #    # #      #       # #
+      #####  #    #   #     #   #####  #    # #####  #        #
+      #    # #    #   #     #   #      #####  #      #        #
+      #    # #    #   #     #   #      #   #  #      #        #
+      #####   ####    #     #   ###### #    # #      ######   #
+                            5.5.4
+  ===================================================================
+[32mINFO [39m Validating config
+[32mINFO [39m 
+  ===================================================================
+      #####  #    # ##### ##### ###### #####  ###### #      #   #
+      #    # #    #   #     #   #      #    # #      #       # #
+      #####  #    #   #     #   #####  #    # #####  #        #
+      #    # #    #   #     #   #      #####  #      #        #
+      #    # #    #   #     #   #      #   #  #      #        #
+      #####   ####    #     #   ###### #    # #      ######   #
+                            5.5.4
+  ===================================================================
+[32mINFO [39m Start processing
+[32mINFO [39m Hexo is running at [4mhttp://localhost:4001/[24m . Press Ctrl+C to stop.

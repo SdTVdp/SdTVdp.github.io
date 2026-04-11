@@ -25,6 +25,9 @@
   --scrollbar-color: rgba(23, 76, 128, 0.4);
   --timeline-bg: rgba(23, 76, 128, 0.08);
   --mark-bg: rgba(116, 173, 236, 0.22);
+  --site-background-overlay-start: rgba(246, 251, 255, 0.16);
+  --site-background-overlay-end: rgba(237, 246, 255, 0.24);
+  --site-background-image-opacity: 0.92;
 }
 
 [data-theme="dark"] {
@@ -54,25 +57,69 @@
   --scrollbar-color: rgba(169, 216, 255, 0.34);
   --timeline-bg: rgba(169, 216, 255, 0.08);
   --mark-bg: rgba(169, 216, 255, 0.22);
+  --site-background-overlay-start: rgba(31, 30, 51, 0.22);
+  --site-background-overlay-end: rgba(31, 30, 51, 0.36);
+  --site-background-image-opacity: 0.76;
 }
 
 html {
   scroll-behavior: smooth;
 }
 
-body,
-#body-wrap {
+body {
   font-family: "Aptos", "Segoe UI Variable Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-  background:
-    linear-gradient(180deg, rgba(246, 251, 255, 0.92), rgba(237, 246, 255, 0.94)),
-    var(--global-bg);
+  background: var(--global-bg);
 }
 
-[data-theme="dark"] body,
-[data-theme="dark"] #body-wrap {
+#body-wrap {
+  background: transparent;
+  position: relative;
+  z-index: 2;
+}
+
+.site-background-root,
+.site-background-image,
+.site-background-veil {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+}
+
+.site-background-root {
+  z-index: 0;
+  background-color: var(--global-bg);
+  opacity: 1;
+  transform: translateZ(0);
+  overflow: hidden;
+}
+
+.site-background-image {
+  z-index: 0;
+  background-image: var(--site-backdrop-image, none);
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  opacity: var(--site-background-image-opacity, 0.9);
+  transform: translateZ(0);
+  filter: saturate(0.98) contrast(0.96);
+}
+
+.site-background-veil {
+  z-index: 1;
   background:
-    linear-gradient(180deg, rgba(31, 30, 51, 0.94), rgba(31, 30, 51, 0.98)),
-    var(--global-bg);
+    linear-gradient(180deg, var(--site-background-overlay-start), var(--site-background-overlay-end));
+}
+
+.ambient-effects-layer {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 1;
 }
 
 code,

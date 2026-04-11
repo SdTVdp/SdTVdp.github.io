@@ -12,7 +12,7 @@
     "compile:client": "tsc -p tsconfig.client.json",
     "compile": "npm run compile:hexo && npm run compile:client",
     "build": "npm run typecheck && npm run compile && hexo clean && hexo generate",
-    "server": "npm run compile && hexo clean && hexo server"
+    "server": "npm run compile && hexo clean && node tools/run-hexo-server.js"
   },
   "hexo": {
     "version": "8.1.1"
