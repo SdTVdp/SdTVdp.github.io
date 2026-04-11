@@ -76,6 +76,9 @@ interface SiteBackdropLayerState {
 }
 
 (() => {
+  const MAX_ACTIVE_METEORS = 6;
+  const MAX_SPAWN_ITERATIONS_PER_FRAME = 3;
+  const AMBIENT_BACKLOG_RESET_MS = 1400;
   const runtimeWindow = window as CustomWindow;
 
   if (runtimeWindow.__sdtvdpCustomUiReady) {
@@ -1110,17 +1113,33 @@ interface SiteBackdropLayerState {
     });
   };
 
-  const scheduleAmbientSpawn = (state: AmbientEffectLayerState, now: number): void => {
+  const getAmbientSpawnDelay = (now: number, darkTheme = isDarkTheme()): number => {
     const random = getAmbientSeededRandom(Math.floor(now) ^ 0x85ebca6b);
+    return darkTheme ? 260 + random() * 380 : 700 + random() * 1260;
+  };
 
-    if (isDarkTheme()) {
-      spawnAmbientMeteor(state, now);
-      state.nextSpawnAt = now + 260 + random() * 380;
+  const resetAmbientSpawnClock = (
+    state: AmbientEffectLayerState,
+    now: number,
+    darkTheme = isDarkTheme()
+  ): void => {
+    state.nextSpawnAt = now + getAmbientSpawnDelay(now, darkTheme);
+  };
+
+  const scheduleAmbientSpawn = (state: AmbientEffectLayerState, now: number): void => {
+    const darkTheme = isDarkTheme();
+
+    if (darkTheme) {
+      if (state.meteors.length < MAX_ACTIVE_METEORS) {
+        spawnAmbientMeteor(state, now);
+      }
+
+      resetAmbientSpawnClock(state, now, darkTheme);
       return;
     }
 
     spawnAmbientSunbeam(state, now);
-    state.nextSpawnAt = now + 700 + random() * 1260;
+    resetAmbientSpawnClock(state, now, darkTheme);
   };
 
   const drawAmbientMeteor = (
@@ -1250,6 +1269,8 @@ interface SiteBackdropLayerState {
     }
 
     if (document.hidden) {
+      state.lastTimestamp = timestamp;
+      resetAmbientSpawnClock(state, timestamp);
       state.frameId = window.requestAnimationFrame(tickAmbientEffects);
       return;
     }
@@ -1260,8 +1281,19 @@ interface SiteBackdropLayerState {
       state.meteors.length = 0;
     }
 
-    while (timestamp >= state.nextSpawnAt) {
+    if (timestamp - state.nextSpawnAt > AMBIENT_BACKLOG_RESET_MS) {
+      resetAmbientSpawnClock(state, timestamp);
+    }
+
+    let spawnIterations = 0;
+
+    while (timestamp >= state.nextSpawnAt && spawnIterations < MAX_SPAWN_ITERATIONS_PER_FRAME) {
       scheduleAmbientSpawn(state, state.nextSpawnAt);
+      spawnIterations += 1;
+    }
+
+    if (timestamp >= state.nextSpawnAt) {
+      resetAmbientSpawnClock(state, timestamp);
     }
 
     state.meteors = state.meteors
@@ -1278,6 +1310,10 @@ interface SiteBackdropLayerState {
         };
       })
       .filter((meteor) => meteor.age < meteor.duration);
+
+    if (state.meteors.length > MAX_ACTIVE_METEORS) {
+      state.meteors = state.meteors.slice(-MAX_ACTIVE_METEORS);
+    }
 
     state.sunbeams = state.sunbeams
       .map((sunbeam) => ({
@@ -1359,8 +1395,11 @@ interface SiteBackdropLayerState {
           ambientLayerState.canvas.width / ambientLayerState.pixelRatio,
           ambientLayerState.canvas.height / ambientLayerState.pixelRatio
         );
+        resetAmbientSpawnClock(ambientLayerState, performance.now());
       } else {
-        ambientLayerState.lastTimestamp = performance.now();
+        const now = performance.now();
+        ambientLayerState.lastTimestamp = now;
+        resetAmbientSpawnClock(ambientLayerState, now);
       }
     });
   };
