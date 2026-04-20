@@ -10,7 +10,7 @@ tags:
 
 这篇文章的主要作用是给标签页和归档页提供更明显的结构样本。
 
-它现在位于 `source/_posts/2026/guides/organization/archive-and-tags.md`，这个三层目录也会自动映射成文章分类。
+它现在位于 `source/_posts/2026/guides/organization/archive-and-tags.md`，这个三层目录会在生成分类时自动跳过“年份”这一层，从 `guides/organization` 开始映射。
 
 ## 现在你可以看到什么
 

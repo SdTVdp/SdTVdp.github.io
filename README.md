@@ -48,7 +48,8 @@
 - `source/uploads/backgrounds/`：背景图、封面图、头图原图
 - `source/uploads/imported/`：自动缓存导入后的 Markdown 图片
 - `src/ts/hexo/`：Hexo 扩展脚本的 TypeScript 源码
-- `src/ts/client/custom.ts`：浏览器端点击粒子、取色等前端 TS 源码
+- `src/ts/client/custom.ts`：全站通用交互的前端 TS 源码
+- `src/ts/client/demos/`：文章内动态演示脚本，例如密码学 demo
 - `scripts/`：Hexo 真实加载的薄包装入口
 - `scaffolds/`：`hexo new` 生成 Markdown 模板时会读取这里
 
@@ -123,7 +124,9 @@ npm run clean
 2. `scripts/*.js` 只是很薄的一层入口，由 Hexo 调用
 3. `npm run build` 时先跑 `tsc`
 4. 编译产物写到 `dist/hexo/`
-5. 浏览器端脚本由 `src/ts/client/custom.ts` 编译到 `source/js/custom.js`
+5. 浏览器端脚本由 `src/ts/client/` 编译到 `source/js/`
+6. 全站逻辑继续放在 `src/ts/client/custom.ts`
+7. 单篇文章 demo 放在 `src/ts/client/demos/*.ts`
 
 这样做的好处是：
 
@@ -151,14 +154,16 @@ source/_posts/<年份>/<一级目录>/<二级目录>/article.md
 source/_posts/2025/ctf/re/蓝桥杯两道逆向.md
 source/_posts/2025/ctf/re/SdTVdp 2025412TGCTF.md
 source/_posts/2026/guides/search/local-search-notes.md
+source/_posts/2026/ctf/event-review/polaris-ctf-review.md
 ```
 
 这样做的效果：
 
 - 第一级目录：年份，例如 `2025`、`2026`
 - 第二级目录：大分类，例如 `ctf`、`guides`
-- 第三级目录：细分类，例如 `re`、`search`
-- 如果你没有手动写 `categories`，站点会自动把这三级目录映射成分类
+- 第三级目录：细分类，例如 `re`、`search`、`event-review`
+- 如果你没有手动写 `categories`，站点会自动跳过“年份”这一层，从内容目录开始映射分类
+- 比赛名建议放到 `tags`，具体题解按题型归档，整场复盘归到 `ctf/event-review/`
 
 ## Hexo scaffolds 是什么
 

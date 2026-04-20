@@ -21,6 +21,7 @@ source/_posts/
   2025/ctf/re/2025_TGCTF.md
   2026/guides/organization/archive-and-tags.md
   2026/guides/search/local-search-notes.md
+  2026/ctf/event-review/polaris-ctf-review.md
   2026/start-here/site-map/start-here.md
 ```
 
@@ -28,14 +29,15 @@ source/_posts/
 
 1. 第一级目录固定写年份，例如 `2025`、`2026`
 2. 第二级目录表示大的内容分区，例如 `ctf`、`guides`、`start-here`
-3. 第三级目录表示更具体的主题，例如 `re`、`organization`、`search`、`site-map`
+3. 第三级目录表示更具体的主题，例如 `re`、`organization`、`search`、`event-review`、`site-map`
 
-如果文章没有手动写 `categories`，站点会自动把这三级目录映射成文章分类。
+如果文章没有手动写 `categories`，站点会自动跳过“年份”这一层，把后面的内容目录映射成文章分类。
 
 ### 推荐的日常写法
 
 - 先确认文章属于哪一年
 - 再确定一级目录和二级主题
+- 比赛名优先放进 `tags`，不要放进目录层级
 - 每篇文章都写 `title`、`date`、`excerpt`
 - 标签继续用于跨分类检索，分类则主要负责归档
 - 代码块记得标语言，方便高亮和搜索命中

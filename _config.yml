@@ -49,11 +49,11 @@ marked:
 
 index_generator:
   path: blog
-  per_page: 0
+  per_page: 8
   order_by: -date
   pagination_dir: page
 
-per_page: 0
+per_page: 8
 pagination_dir: page
 theme: butterfly
 

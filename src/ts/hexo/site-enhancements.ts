@@ -25,6 +25,31 @@ const getTagHue = (tagName: unknown): number =>
 
 const buildTagStyle = (tagName: unknown): string => `--tag-hue:${getTagHue(tagName)};`;
 
+const normalizePagedPosts = (value: unknown): HexoCollection<HexoRenderable> | undefined => {
+  if (!value) {
+    return undefined;
+  }
+
+  if (Array.isArray(value)) {
+    const arrayWithData = value as HexoRenderable[] & { data?: HexoRenderable[] };
+    return Array.isArray(arrayWithData.data)
+      ? arrayWithData
+      : Object.assign(arrayWithData.slice(), { data: arrayWithData.slice() });
+  }
+
+  if (typeof value !== "object") {
+    return undefined;
+  }
+
+  const collection = value as Exclude<HexoCollection<HexoRenderable>, HexoRenderable[]>;
+  if (Array.isArray(collection.data)) {
+    return collection;
+  }
+
+  const normalized = toArray(collection);
+  return Object.assign(normalized.slice(), { data: normalized });
+};
+
 const syncExcerptToDescription = (entry: HexoRenderable): boolean => {
   const excerpt = htmlToText(entry.excerpt);
 
@@ -259,6 +284,24 @@ hexo.extend.filter.register("before_generate", async () => {
       setEntryValue(entry, "top", sticky);
     }
   }
+});
+
+hexo.extend.filter.register("template_locals", (locals: Record<string, unknown>) => {
+  if (!locals || typeof locals !== "object") {
+    return locals;
+  }
+
+  const page = locals.page as Record<string, unknown> | undefined;
+  if (!page || typeof page !== "object") {
+    return locals;
+  }
+
+  const posts = normalizePagedPosts(page.posts);
+  if (posts) {
+    page.posts = posts;
+  }
+
+  return locals;
 });
 
 hexo.extend.filter.register("after_render:html", (html: string) => withVersionedCustomAssets(html));
