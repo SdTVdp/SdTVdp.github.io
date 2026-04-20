@@ -17,7 +17,9 @@ const deriveCategoriesFromSource = (source: unknown): string[] => {
     return [];
   }
 
-  return parts.slice(postRootIndex + 1, -1).slice(0, 3);
+  const scoped = parts.slice(postRootIndex + 1, -1);
+  const categoryStart = /^\d{4}$/.test(scoped[0] ?? "") ? scoped.slice(1) : scoped;
+  return categoryStart.filter(Boolean).slice(0, 3);
 };
 
 hexo.extend.filter.register("before_generate", () => {

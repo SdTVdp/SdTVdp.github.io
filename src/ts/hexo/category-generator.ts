@@ -19,10 +19,12 @@ hexo.extend.generator.register("category", (locals: HexoLocals) => {
       return result;
     }
 
-    const posts =
+    const orderedPosts =
       typeof category.posts.sort === "function"
         ? category.posts.sort(orderBy)
         : toArray(category.posts);
+    const normalizedPosts = toArray(orderedPosts);
+    const posts = Object.assign(normalizedPosts.slice(), { data: normalizedPosts });
 
     const data = pagination(category.path, posts, {
       perPage,
