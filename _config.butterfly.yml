@@ -218,6 +218,8 @@ inject:
   bottom:
     - <script data-pjax src="/js/custom.js"></script>
     - <script data-pjax src="/js/demos/asymmetric-principles.js"></script>
+    - <script data-pjax src="/js/demos/rsa-textbook.js"></script>
+    - <script data-pjax src="/js/demos/elgamal-encrypt.js"></script>
     - <script data-pjax src="/js/demos/hybrid-encryption.js"></script>
     - <script data-pjax src="/js/demos/rsa-oaep-encrypt.js"></script>
     - <script data-pjax src="/js/demos/ecdsa-sign-verify.js"></script>

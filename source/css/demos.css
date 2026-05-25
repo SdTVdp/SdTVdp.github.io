@@ -229,6 +229,120 @@
   color: var(--meta-color, #6f7f92);
 }
 
+.public-key-flowchart {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: stretch;
+  gap: 0.65rem;
+  margin: 1.35rem 0;
+}
+
+.public-key-flowchart .flow-node {
+  min-width: 0;
+  border: 1px solid var(--card-border, rgba(64, 92, 122, 0.24));
+  border-radius: 8px;
+  padding: 0.85rem;
+  background: rgba(255, 255, 255, 0.68);
+}
+
+[data-theme="dark"] .public-key-flowchart .flow-node {
+  background: rgba(9, 14, 20, 0.72);
+}
+
+.public-key-flowchart .flow-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.55rem;
+  height: 1.55rem;
+  margin-bottom: 0.45rem;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--theme-color, #174c80);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.public-key-flowchart strong {
+  display: block;
+  margin-bottom: 0.28rem;
+}
+
+.public-key-flowchart p {
+  margin: 0;
+  color: var(--meta-color, #6f7f92);
+}
+
+.public-key-flowchart .flow-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--theme-color, #174c80);
+  font-weight: 700;
+}
+
+.crypto-demo .demo-number-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.crypto-demo .demo-mini-field {
+  display: grid;
+  gap: 0.3rem;
+  font-weight: 600;
+}
+
+.crypto-demo .demo-number-input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  border: 1px solid var(--card-border, rgba(64, 92, 122, 0.22));
+  border-radius: 8px;
+  padding: 0.56rem 0.62rem;
+  font: inherit;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.86);
+}
+
+[data-theme="dark"] .crypto-demo .demo-number-input {
+  background: rgba(9, 14, 20, 0.86);
+}
+
+.crypto-demo .demo-kv-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 0.85rem;
+}
+
+.crypto-demo .demo-kv {
+  display: grid;
+  gap: 0.18rem;
+  min-width: 0;
+  border: 1px solid var(--card-border, rgba(64, 92, 122, 0.22));
+  border-radius: 8px;
+  padding: 0.62rem 0.7rem;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+[data-theme="dark"] .crypto-demo .demo-kv {
+  background: rgba(9, 14, 20, 0.72);
+}
+
+.crypto-demo .demo-kv strong {
+  color: var(--meta-color, #6f7f92);
+  font-size: 0.86rem;
+  line-height: 1.25;
+}
+
+.crypto-demo .demo-kv span {
+  overflow-wrap: anywhere;
+  font-family: "JetBrains Mono", "Cascadia Code", "IBM Plex Mono", Consolas, monospace;
+  font-size: 0.94rem;
+}
+
 @media (max-width: 768px) {
   .crypto-demo .demo-card {
     padding: 0.9rem;
@@ -236,6 +350,20 @@
 
   .crypto-demo .demo-grid {
     grid-template-columns: 1fr;
+  }
+
+  .crypto-demo .demo-number-grid,
+  .crypto-demo .demo-kv-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .public-key-flowchart {
+    grid-template-columns: 1fr;
+  }
+
+  .public-key-flowchart .flow-arrow {
+    transform: rotate(90deg);
+    min-height: 1.2rem;
   }
 
   .crypto-demo .demo-actions {

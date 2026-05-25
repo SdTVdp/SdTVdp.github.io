@@ -1,184 +1,181 @@
 ---
-title: "公私钥算法动态演示：RSA-OAEP、ECDSA 与混合加密模板"
+title: "公私钥算法动态演示：RSA 与 ElGamal"
 date: 2026-04-21 20:00:00
-updated: 2026-04-21 21:30:00
-slug: rsa-oaep-and-ecdsa-demos
+updated: 2026-05-24 16:30:00
+slug: rsa-elgamal-public-key-demos
 tags:
   - crypto
   - public-key
   - rsa
-  - rsa-oaep
-  - ecdsa
-  - webcrypto
-  - hybrid-encryption
-excerpt: "用浏览器端 Web Crypto API 演示 RSA-OAEP 加密、ECDSA 签名，并补上一套可切换 preset / adapter 的非对称加密与混合加密讲解模板。"
+  - elgamal
+excerpt: "面向课堂展示：用 RSA 与 ElGamal 说明非对称加密基本流程，并对照实验四参数完成加密、解密和计算结果展示。"
 ---
 
-## TL;DR
+## 1. 展示目标
 
-这一页现在分成四块：
+这节课只围绕两个公钥密码体制展开：`RSA` 和 `ElGamal`。
 
-1. 一个不绑定具体算法的“非对称加密基本流程与原理”动态模板
-2. 一个可运行的 `RSA-OAEP` 公钥加密 / 私钥解密 demo
-3. 一个可运行的 `ECDSA` 私钥签名 / 公钥验签 demo
-4. 一个可切换适配器的混合加密模板，其中已经附带 `RSA-OAEP + AES-GCM` 的可运行实例
+重点不是背公式，而是看清三件事：
 
-如果老师最后确认讲别的算法，我只需要改 `data-preset`、`data-adapter`，或者在对应 TS 文件里加一个新的 preset / adapter。
+1. 非对称加密中，公钥和私钥承担不同职责。
+2. RSA 和 ElGamal 都能完成“公钥加密、私钥解密”，但密钥结构和密文形式不同。
+3. 实验四给出的参数都很小，适合手算、验证和课堂演示。
 
-## 前置知识
+## 2. 非对称加密基本流程图
 
-- 知道 `publicKey` 和 `privateKey` 是两把职责不同的钥匙
-- 知道“加密”和“签名”是两条不同流程
-- 知道真实系统里经常把非对称算法和对称算法组合使用
+RSA 和 ElGamal 的公式不同，但基本流程相同：接收方公开公钥，保管私钥；发送方用公钥加密；接收方用私钥解密。
 
-## 动态模板 0：非对称加密的基本流程与原理
+<div class="public-key-flowchart" aria-label="非对称加密基本流程图">
+  <section class="flow-node">
+    <span class="flow-index">1</span>
+    <strong>接收方生成密钥对</strong>
+    <p>得到 public key 和 private key</p>
+  </section>
+  <span class="flow-arrow">→</span>
+  <section class="flow-node">
+    <span class="flow-index">2</span>
+    <strong>公开公钥</strong>
+    <p>发送方可以拿到 public key</p>
+  </section>
+  <span class="flow-arrow">→</span>
+  <section class="flow-node">
+    <span class="flow-index">3</span>
+    <strong>公钥加密明文</strong>
+    <p>message 变成 ciphertext</p>
+  </section>
+  <span class="flow-arrow">→</span>
+  <section class="flow-node">
+    <span class="flow-index">4</span>
+    <strong>私钥解密密文</strong>
+    <p>接收方恢复 message</p>
+  </section>
+</div>
 
-这张卡是通用模板，不绑定 RSA、ECDSA 或其他具体算法，适合在课堂开头先把概念讲清楚。
+这个流程图里最关键的一点是：公钥可以公开，私钥不能公开。RSA 和 ElGamal 的具体计算都不能破坏这个方向。
 
-<div class="crypto-demo" data-demo="asymmetric-principles" data-preset="lecture-template"></div>
+## 3. RSA 作业部分展示与对照
 
-### 如果要切成某个具体算法
+RSA 的核心是构造两个互逆的指数。
 
-- 讲 RSA：把 `data-preset="lecture-template"` 改成 `data-preset="rsa-lecture"`
-- 讲椭圆曲线：改成 `data-preset="ecc-lecture"`
-- 讲别的算法：去 `src/ts/client/demos/asymmetric-principles.ts` 里复制一个 preset，再替换文案
+1. 选择两个素数 `p`、`q`，计算 `n=p*q`。
+2. 计算 `phi(n)=(p-1)*(q-1)`。
+3. 选择公钥指数 `e`，要求 `gcd(e,phi(n))=1`。
+4. 计算私钥指数 `d`，使 `e*d ≡ 1 (mod phi(n))`。
+5. 加密：`c = m^e mod n`。
+6. 解密：`m = c^d mod n`。
 
-## 动态演示 1：RSA-OAEP 公钥加密
-
-这部分演示的是最常见的课堂链路：
-
-```text
-Bob 生成密钥对
-Alice 使用 Bob 的 publicKey 加密消息
-Bob 使用自己的 privateKey 解密消息
-```
-
-这里我保留了一个真实可运行 demo，方便你现场讲“机密性”。
-
-<div class="crypto-demo" data-demo="rsa-oaep-encrypt"></div>
-
-### 这段 demo 适合怎么讲
-
-- 先强调 `publicKey` 可以公开，`privateKey` 不公开
-- 再强调 RSA 这里更适合演示短消息或会话密钥，不适合直接加密长正文
-- 最后顺势引到后面的混合加密模板
-
-## 动态演示 2：ECDSA 私钥签名 / 公钥验签
-
-这部分专门用来纠正一个常见误解：签名不是“把消息用私钥反着加密”。
-
-```text
-Alice 用 privateKey 生成 signature
-Bob 用 publicKey 验证 signature
-如果消息被改动，验签结果会失败
-```
-
-<div class="crypto-demo" data-demo="ecdsa-sign-verify"></div>
-
-### 这段 demo 适合怎么讲
-
-- 先让观众看“原消息验签通过”
-- 再看“篡改消息后验签失败”
-- 重点落在“真实性”和“完整性”
-
-## 动态模板 3：混合加密流程模板
-
-真实系统里，非对称算法通常不直接处理整段正文，而是负责保护一个短小的会话密钥。
-
-下面这张卡是通用模板，默认不绑定具体算法：
-
-<div
-  class="crypto-demo"
-  data-demo="hybrid-encryption"
-  data-adapter="template-generic"
-  data-template-title="混合加密课堂模板"
-  data-asymmetric-label="待确认公钥算法"
-  data-symmetric-label="待确认对称算法"
-  data-session-key-label="会话密钥"
-></div>
-
-### 通用模板里的默认流程
+代入题目参数：
 
 ```text
-1. 生成会话密钥
-2. 用对称算法加密正文
-3. 用公钥算法保护会话密钥
-4. 接收方先恢复会话密钥
-5. 再用对称算法解开正文
+p = 11, q = 13
+n = 143
+phi(n) = 120
+e = 7
+d = 103
 ```
 
-如果老师最后指定：
-
-- `RSA + AES-GCM`：直接切到 `rsa-oaep-aes-gcm`
-- `ECDH + AES-GCM`：新增一个 `ecdh-aes-gcm` adapter
-- 其他公钥方案：继续沿用这个模板，只换 adapter 和文案
-
-## 动态演示 4：RSA-OAEP + AES-GCM 混合加密实例
-
-这一块是已经可以跑起来的版本，用来展示“为什么真实系统更常采用混合加密”。
-
-<div class="crypto-demo" data-demo="hybrid-encryption" data-adapter="rsa-oaep-aes-gcm"></div>
-
-## 以后如果要快速换算法，我该改哪里
-
-### 1. 只想改课堂讲解逻辑，不动 UI 骨架
-
-改这里：
+因为：
 
 ```text
-src/ts/client/demos/asymmetric-principles.ts
+7 * 103 = 721
+721 mod 120 = 1
 ```
 
-做法：
+所以 `d=103`。
 
-- 复制一个 preset
-- 替换标题、流程步骤、讲解提示
-- 回到文章，把 `data-preset` 改成新的 preset 名
-
-### 2. 想换混合加密方案
-
-改这里：
+作业计算：
 
 ```text
-src/ts/client/demos/hybrid-encryption.ts
+85^7 mod 143 = 123
+91^7 mod 143 = 130
+123^103 mod 143 = 85
 ```
 
-做法：
+与正式 RSA 相比，这个实验版为了展示原理做了明显简化：
 
-- 复制一个 adapter
-- 替换算法标签、运行逻辑和输出说明
-- 回到文章，把 `data-adapter` 改成新的 adapter 名
+| 项目 | 本题实验版 RSA | 正式实现中应补上的内容 |
+| --- | --- | --- |
+| 参数规模 | `p=11`、`q=13`，`n=143`，可以手算 | 使用至少 2048 bit 级别的模数，由安全随机数生成大素数 |
+| 加密形式 | 直接计算 `c=m^e mod n` | 不能使用裸 RSA，加密应使用 OAEP 这类安全填充 |
+| 明文处理 | 明文被当成一个小整数 | 需要规范编码、分块限制，真实长消息通常交给对称加密处理 |
+| 随机性 | 同一明文总是得到同一密文 | OAEP 会引入随机填充，避免确定性加密暴露信息 |
+| 抗攻击能力 | 只展示数学可逆性 | 需要考虑填充攻击、选择密文攻击、侧信道攻击和密钥保护 |
 
-### 3. 只想临时改课堂标题或标签，不想进 TS
+也就是说，这里的 RSA 保留了最核心的陷门结构：`e` 和 `d` 在 `phi(n)` 下互逆；但牺牲了正式系统需要的参数规模、随机填充、消息编码和抗攻击设计。
 
-可以直接改文章里的这些属性：
+如果要从实验版改进到更正式的思路，方向应该是：使用成熟密码库生成密钥，采用 `RSA-OAEP` 做短数据或会话密钥封装，再用对称加密算法处理正文。
 
-```html
-data-template-title
-data-asymmetric-label
-data-symmetric-label
-data-session-key-label
-```
+<div class="crypto-demo" data-demo="rsa-textbook"></div>
 
-这套接口就是专门给“老师临时改题目，我得快速切换讲法”留的。
+## 4. ElGamal 作业部分展示与对照
 
-## 安全边界
+ElGamal 建立在离散对数问题上。它和 RSA 一样属于公钥密码体制，但每次加密还需要一个随机数 `k`。
 
-本页所有 demo 都只用于理解概念，不代表生产级协议设计。
-
-1. 不要在页面里输入真实密码、私钥、Token 或敏感数据
-2. 真实系统应该使用成熟协议和经过审计的库，不要自己发明密码协议
-3. 浏览器端 demo 适合教学、实验和直觉说明，不适合替代正式的安全设计
-
-## 总结
-
-现在这页既能讲具体例子，也留了足够多的“空白模板”和切换接口：
+密钥生成：
 
 ```text
-非对称加密原理：asymmetric-principles preset
-混合加密流程：hybrid-encryption adapter
-具体 RSA 演示：rsa-oaep-encrypt
-具体签名演示：ecdsa-sign-verify
+选择素数 p 和生成元 g
+选择私钥 x
+计算公钥 y = g^x mod p
+公钥为 (p,g,y)，私钥为 x
 ```
 
-下一次如果要切换算法，我可以直接从 preset / adapter 入口开始改，而不用重写整篇文章或重做前端结构。
+加密：
+
+```text
+c1 = g^k mod p
+c2 = m * y^k mod p
+密文为 (c1,c2)
+```
+
+解密：
+
+```text
+s = c1^x mod p
+m = c2 * s^{-1} mod p
+```
+
+代入题目参数：
+
+```text
+p = 509
+g = 449
+x = 12
+y = 449^12 mod 509 = 438
+k = 18
+c1 = 449^18 mod 509 = 231
+y^k mod p = 66
+```
+
+作业计算：
+
+```text
+m1 = 123:
+c2 = 123 * 66 mod 509 = 483
+cipher = (231,483)
+
+m2 = 407:
+c2 = 407 * 66 mod 509 = 394
+cipher = (231,394)
+
+given (231,492):
+s = 231^12 mod 509 = 66
+s^{-1} mod 509 = 54
+m = 492 * 54 mod 509 = 100
+```
+
+与正式 ElGamal 相比，这个实验版也裁掉了很多安全条件：
+
+| 项目 | 本题实验版 ElGamal | 正式实现中应补上的内容 |
+| --- | --- | --- |
+| 参数规模 | `p=509`，适合手算和展示 | 使用足够大的安全素数，或使用椭圆曲线群等成熟参数 |
+| 群结构 | 只展示素数域和生成元 | 正式实现要明确群阶、子群选择和参数验证 |
+| 随机数 `k` | 为复现实验结果固定为 `k=18` | 每次加密必须使用不可预测、不可复用的随机 `k` |
+| 明文处理 | 明文直接作为模 `p` 中的整数 | 需要安全编码，把消息映射到群元素或采用混合加密结构 |
+| 密文安全性 | 只展示 `(c1,c2)` 的可解密关系 | 需要认证、完整性保护，并避免选择密文攻击 |
+
+这里最大的一处“为了展示牺牲安全性”的地方是固定 `k=18`。在正式 ElGamal 中，`k` 一旦复用，多个密文会共享同一个掩码 `y^k`，攻击者就能看出明文之间的比例关系；如果其中一个明文已知，其他同 `k` 密文就可能被解开。
+
+因此，这个 ElGamal 实验版保留的是离散对数陷门和共享掩码思想；牺牲的是大参数、安全随机数、消息编码、认证保护和抗攻击模型。改进方向是使用成熟群参数、强随机数、一次一密的 `k`，并把 ElGamal 用作混合加密中的密钥封装或和认证机制组合使用。
+
+<div class="crypto-demo" data-demo="elgamal-encrypt"></div>

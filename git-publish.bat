@@ -58,6 +58,22 @@ git diff --cached --quiet --exit-code
 if not errorlevel 1 goto :no_staged_changes
 
 echo.
+echo Staged changes summary:
+git diff --cached --stat
+if errorlevel 1 goto :fail
+
+echo.
+set "CONFIRM_PUBLISH="
+set /p "CONFIRM_PUBLISH=Commit and push these changes? [y/N]: "
+if /i "%CONFIRM_PUBLISH%"=="Y" goto :confirmed_publish
+if /i "%CONFIRM_PUBLISH%"=="YES" goto :confirmed_publish
+
+echo Commit canceled by user before creating a commit.
+if "%NEED_PAUSE%"=="1" pause
+exit /b 1
+
+:confirmed_publish
+echo.
 echo [4/5] Creating commit...
 git commit -m "%COMMIT_MSG%"
 if errorlevel 1 (

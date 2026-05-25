@@ -38,7 +38,7 @@ declare interface HexoLocals {
     name: string;
     path: string;
     length: number;
-    posts: HexoCollection<HexoRenderable> & { sort?: (orderBy: string) => HexoRenderable[] };
+      posts: HexoCollection<HexoRenderable> & { sort?: (orderBy: string) => HexoRenderable[] };
   }>;
   [key: string]: unknown;
 }
