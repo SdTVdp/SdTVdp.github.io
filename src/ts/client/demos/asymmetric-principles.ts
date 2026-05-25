@@ -8,7 +8,7 @@
 
   runtime[globalFlag] = true;
 
-  type DemoMode = "encrypt" | "sign";
+  type DemoMode = "workflow" | "lab";
   type FlowStep = {
     actor: string;
     title: string;
@@ -30,209 +30,143 @@
     modes: Record<DemoMode, DemoModeConfig>;
   };
 
-  /*
-   * Quick-change interface:
-   * 1. In Markdown, set data-preset="lecture-template" / "rsa-lecture" / "ecc-lecture".
-   * 2. To add a new algorithm later, copy one preset below and only replace the labels/text.
-   * 3. This file is intentionally algorithm-light so it can stay as a reusable classroom template.
-   */
+  const escapeHtml = (value: string): string =>
+    value
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;");
+
   const PRESETS: Record<string, PrinciplePreset> = {
-    "lecture-template": {
-      id: "lecture-template",
-      title: "非对称加密基本流程与原理模板",
-      intro: "这个模板用于讲解“为什么要有公钥和私钥、什么时候用加密流程、什么时候用签名流程”。",
-      note: "老师如果最后指定算法，只需要新增或改一个 preset，再把文章里的 data-preset 改过去。",
-      publicKeyMeaning: "公开给通信方或验证方。通常用于加密、验签，或者参与密钥协商。",
-      privateKeyMeaning: "只由持有者自己保管。通常用于解密、签名，或者参与密钥协商。",
+    "public-key-core": {
+      id: "public-key-core",
+      title: "非对称加密基本流程：公钥公开，私钥保密",
+      intro: "这张卡只保留公钥密码体制的骨架：接收方生成密钥对，发送方用公钥加密，接收方用私钥解密。",
+      note: "RSA 和 ElGamal 的数学细节不同，但课堂讲解时都不能破坏这条主线：公钥负责开放入口，私钥负责唯一解开。",
+      publicKeyMeaning: "可以公开给发送方。发送方拿到公钥后，只能把明文变成密文，不能反推出私钥。",
+      privateKeyMeaning: "只由接收方保存。解密能力来自私钥，因此私钥泄露就等于失去机密性边界。",
       principleLines: [
-        "核心不是“两把钥匙都能做一样的事”，而是公钥和私钥承担不同职责。",
-        "加密流程强调机密性：别人可以加密，只有持有私钥的人能解开。",
-        "签名流程强调真实性和完整性：只有持有私钥的人能签，其他人用公钥验证。",
+        "非对称加密解决的是“没有预共享密钥时，怎样让别人安全地把消息发给我”。",
+        "公钥和私钥不是两把能随便互换的钥匙，而是承担不同方向的数学职责。",
+        "实验参数很小，适合手算和动画演示；真实系统必须使用大整数、填充、随机数和成熟库。",
       ],
       modes: {
-        encrypt: {
-          label: "机密性流程",
-          summary: "适合讲“发送方怎样把消息锁起来，只让接收方打开”。",
+        workflow: {
+          label: "通用加密流程",
+          summary: "先把角色关系讲清楚，再进入 RSA 和 ElGamal 的具体公式。",
           steps: [
             {
               actor: "接收方",
-              title: "生成一对密钥",
-              detail: "接收方先准备 publicKey / privateKey，其中 privateKey 不外发。",
+              title: "生成一对关联密钥",
+              detail: "接收方先得到 publicKey / privateKey，并只把 publicKey 公开出去。",
             },
             {
               actor: "发送方",
-              title: "拿到 publicKey",
-              detail: "发送方只需要拿到 publicKey，就可以开始面向接收方加密。",
+              title: "拿到接收方的公钥",
+              detail: "发送方不需要知道私钥，只要确认这把公钥确实属于接收方。",
             },
             {
               actor: "发送方",
-              title: "加密得到 ciphertext",
-              detail: "明文 message 经过 publicKey 处理后得到 ciphertext，旁观者无法直接读懂。",
+              title: "用公钥加密明文",
+              detail: "明文 message 经过公钥算法得到 ciphertext，旁观者只能看到密文。",
             },
             {
               actor: "接收方",
-              title: "用 privateKey 解密",
-              detail: "接收方用 privateKey 恢复 message，这一步体现“只有我能打开”。",
+              title: "用私钥恢复明文",
+              detail: "接收方使用 privateKey 解密 ciphertext，恢复出原始 message。",
             },
           ],
         },
-        sign: {
-          label: "真实性流程",
-          summary: "适合讲“为什么签名不是反过来的加密”。",
+        lab: {
+          label: "实验映射",
+          summary: "把通用流程映射到这次实验里的 RSA 和 ElGamal 参数。",
           steps: [
             {
-              actor: "持有者",
-              title: "生成一对密钥",
-              detail: "持有者准备 publicKey / privateKey，并把 publicKey 提供给验证方。",
+              actor: "RSA",
+              title: "公钥是 (e, n)，私钥是 (d, n)",
+              detail: "实验中 p=11、q=13、e=7，计算 n=143、phi(n)=120、d=103。",
             },
             {
-              actor: "持有者",
-              title: "对消息做签名",
-              detail: "持有者用 privateKey 对 message 生成 signature，证明消息来自自己。",
+              actor: "RSA",
+              title: "加密和解密都是模幂",
+              detail: "加密 c=m^e mod n；解密 m=c^d mod n。平方乘法用于减少模幂运算量。",
             },
             {
-              actor: "验证方",
-              title: "拿到 message + signature",
-              detail: "验证方不需要私钥，只需要 publicKey、消息和签名值。",
+              actor: "ElGamal",
+              title: "公钥是 (p, g, y)，私钥是 x",
+              detail: "实验中 p=509、g=449、x=12，公钥 y=g^x mod p=438。",
             },
             {
-              actor: "验证方",
-              title: "验签判断是否通过",
-              detail: "如果消息被篡改，或者签名不是对应私钥生成的，验证就会失败。",
+              actor: "ElGamal",
+              title: "每次加密都需要随机 k",
+              detail: "密文是 (c1,c2)=(g^k mod p, m*y^k mod p)。k 不能复用，否则会泄露结构信息。",
             },
           ],
         },
       },
     },
-    "rsa-lecture": {
-      id: "rsa-lecture",
-      title: "RSA 讲解模板",
-      intro: "这个 preset 用于你确认老师要讲 RSA 之后，快速把通用模板切成 RSA 版本。",
-      note: "如果需要进一步区分 RSA-OAEP 和 RSA-PSS，可以在后面继续拆更细的 preset。",
-      publicKeyMeaning: "RSA 公钥常用于加密或验签。课堂里可以把它理解成“公开锁”。",
-      privateKeyMeaning: "RSA 私钥常用于解密或签名。课堂里可以把它理解成“只有持有者知道的钥匙”。",
+    "rsa-elgamal-lab": {
+      id: "rsa-elgamal-lab",
+      title: "RSA 与 ElGamal 实验讲解模板",
+      intro: "这一版直接对齐实验四：先保留非对称加密的公共流程，再把 RSA 和 ElGamal 的公式、参数、结果放到同一张卡里比较。",
+      note: "模板优化后的重点不是再给未来算法留空位，而是让作业题、源码和动画互相印证。",
+      publicKeyMeaning: "RSA 中是 (e,n)=(7,143)；ElGamal 中是 (p,g,y)=(509,449,438)。它们都可以交给发送方。",
+      privateKeyMeaning: "RSA 中是 (d,n)=(103,143)；ElGamal 中是 x=12。它们必须由接收方保存。",
       principleLines: [
-        "RSA 加密和 RSA 签名是两类不同用途，不要混成“私钥加密 = 签名”。",
-        "RSA 更适合处理短消息、摘要或会话密钥，不适合直接加密长正文。",
-        "真实系统里，RSA 常和 AES-GCM 一起组成混合加密。",
+        "RSA 的陷门来自模 n 上的指数互逆关系，d 是 e 关于 phi(n) 的模逆。",
+        "ElGamal 的陷门来自离散对数困难性，公开 y=g^x mod p 不应暴露 x。",
+        "两者都依赖快速模幂；实验里的平方乘法正是这部分的核心实现。",
       ],
       modes: {
-        encrypt: {
-          label: "RSA 加密流程",
-          summary: "把 RSA 放在“公钥加密短消息或会话密钥”的位置来讲最稳。",
+        workflow: {
+          label: "共同流程",
+          summary: "先看两种算法都遵守的公钥加密流程。",
           steps: [
             {
-              actor: "Bob",
-              title: "生成 RSA 密钥对",
-              detail: "Bob 生成 RSA publicKey / privateKey，并只公开 publicKey。",
-            },
-            {
-              actor: "Alice",
-              title: "使用 Bob 的 publicKey",
-              detail: "Alice 拿到 Bob 的 publicKey 后，可以把短消息或会话密钥加密给 Bob。",
-            },
-            {
-              actor: "Alice",
-              title: "得到密文",
-              detail: "加密后输出 ciphertext，旁观者即使拿到也不能直接恢复原文。",
-            },
-            {
-              actor: "Bob",
-              title: "使用 privateKey 解密",
-              detail: "Bob 用自己的 privateKey 恢复原文，完成机密性链路。",
-            },
-          ],
-        },
-        sign: {
-          label: "RSA 签名流程",
-          summary: "强调签名常对消息摘要进行，而不是把原文整个“倒着加密”。",
-          steps: [
-            {
-              actor: "Alice",
-              title: "准备 RSA 密钥对",
-              detail: "Alice 公开 publicKey，自己保管 privateKey。",
-            },
-            {
-              actor: "Alice",
-              title: "生成 signature",
-              detail: "Alice 用 privateKey 对消息摘要生成 signature。",
-            },
-            {
-              actor: "Bob",
-              title: "拿到 publicKey",
-              detail: "Bob 使用 Alice 的 publicKey 检查 signature 是否对应当前消息。",
-            },
-            {
-              actor: "Bob",
-              title: "判定是否通过",
-              detail: "消息一旦被改动，或者签名不对应这把私钥，验证就会失败。",
-            },
-          ],
-        },
-      },
-    },
-    "ecc-lecture": {
-      id: "ecc-lecture",
-      title: "椭圆曲线讲解模板",
-      intro: "这个 preset 用于你想把课堂重点放在 ECDSA / ECDH 一类算法时使用。",
-      note: "ECC 家族里“签名”和“协商”更常见，直接拿来讲公钥加密时要说明算法背景。",
-      publicKeyMeaning: "ECC 公钥通常用于验签或参与共享密钥计算。",
-      privateKeyMeaning: "ECC 私钥通常用于签名或参与共享密钥计算。",
-      principleLines: [
-        "ECC 更像一个算法家族，常见用途包括签名、密钥交换和身份认证。",
-        "课堂上如果只讲 ECDSA，可以把重点放在“签名与验签”而不是“直接公钥加密”。",
-        "如果讲 ECDH，则可以自然过渡到“协商共享密钥，再交给对称算法处理正文”。",
-      ],
-      modes: {
-        encrypt: {
-          label: "协商共享密钥",
-          summary: "更贴近 ECDH 的真实用法：先协商共享密钥，再用对称算法加密正文。",
-          steps: [
-            {
-              actor: "通信双方",
-              title: "各自生成 ECC 密钥对",
-              detail: "双方各自保留私钥，并交换各自的公钥。",
-            },
-            {
-              actor: "双方",
-              title: "计算共享密钥",
-              detail: "双方使用自己的私钥和对方的公钥，计算出同一个共享秘密。",
+              actor: "接收方",
+              title: "生成密钥材料",
+              detail: "RSA 生成 p、q、e、d；ElGamal 选择 p、g、x 并计算 y。",
             },
             {
               actor: "发送方",
-              title: "导出会话密钥并加密",
-              detail: "共享秘密通常经过派生后变成对称加密密钥，用来加密正文。",
+              title: "只拿公开参数",
+              detail: "RSA 发送方只用 (e,n)；ElGamal 发送方只用 (p,g,y) 和一次性随机数 k。",
+            },
+            {
+              actor: "发送方",
+              title: "输出密文",
+              detail: "RSA 输出单个数 c；ElGamal 输出一对数 (c1,c2)，因为需要携带 g^k。",
             },
             {
               actor: "接收方",
-              title: "用同一会话密钥解密",
-              detail: "接收方得到同一个会话密钥后，就能解开正文。",
+              title: "使用私钥解密",
+              detail: "RSA 用 d 做模幂；ElGamal 用 x 还原共享秘密并乘上模逆。",
             },
           ],
         },
-        sign: {
-          label: "ECDSA 签名流程",
-          summary: "椭圆曲线签名常用于强调“消息没被篡改，而且签名来自对应私钥”。",
+        lab: {
+          label: "题目结果",
+          summary: "用动画前先把 docx 和 main.c 的确定结果列出来。",
           steps: [
             {
-              actor: "持有者",
-              title: "准备 ECDSA 密钥对",
-              detail: "持有者公开 publicKey，私钥只保留在本地。",
+              actor: "RSA",
+              title: "m1=85 加密得到 123",
+              detail: "85^7 mod 143 = 123；给定密文 y=123 解密后也得到 85。",
             },
             {
-              actor: "持有者",
-              title: "对消息摘要签名",
-              detail: "签名值证明这条消息对应持有者手里的 privateKey。",
+              actor: "RSA",
+              title: "m2=91 加密得到 130",
+              detail: "91^7 mod 143 = 130；再用 d=103 解密可恢复 91。",
             },
             {
-              actor: "验证方",
-              title: "拿到公钥和签名",
-              detail: "验证方不用知道私钥，只需检查签名和消息是否匹配。",
+              actor: "ElGamal",
+              title: "m1=123 加密得到 (231,483)",
+              detail: "k=18 时 c1=449^18 mod 509=231，c2=123*438^18 mod 509=483。",
             },
             {
-              actor: "验证方",
-              title: "发现篡改就失败",
-              detail: "消息内容只要被动过，验签结果就会改变。",
+              actor: "ElGamal",
+              title: "m2=407 加密得到 (231,394)",
+              detail: "同一组实验参数下，给定密文 (231,492) 解密得到明文 100。",
             },
           ],
         },
@@ -243,23 +177,23 @@
   const render = (root: HTMLElement, preset: PrinciplePreset): void => {
     root.innerHTML = `
       <div class="demo-card">
-        <h3 class="demo-title">${preset.title}</h3>
-        <p class="demo-copy">${preset.intro}</p>
-        <p class="demo-note">${preset.note}</p>
+        <h3 class="demo-title">${escapeHtml(preset.title)}</h3>
+        <p class="demo-copy">${escapeHtml(preset.intro)}</p>
+        <p class="demo-note">${escapeHtml(preset.note)}</p>
         <div class="demo-grid">
           <section class="demo-panel">
-            <h4 class="demo-panel-title">publicKey 通常负责什么</h4>
-            <p class="demo-panel-copy">${preset.publicKeyMeaning}</p>
+            <h4 class="demo-panel-title">publicKey / 公钥</h4>
+            <p class="demo-panel-copy">${escapeHtml(preset.publicKeyMeaning)}</p>
           </section>
           <section class="demo-panel">
-            <h4 class="demo-panel-title">privateKey 通常负责什么</h4>
-            <p class="demo-panel-copy">${preset.privateKeyMeaning}</p>
+            <h4 class="demo-panel-title">privateKey / 私钥</h4>
+            <p class="demo-panel-copy">${escapeHtml(preset.privateKeyMeaning)}</p>
           </section>
         </div>
         <ul class="demo-list" data-role="principles"></ul>
         <div class="demo-tabs" data-role="tabs">
-          <button class="demo-tab" type="button" data-mode="encrypt"></button>
-          <button class="demo-tab" type="button" data-mode="sign"></button>
+          <button class="demo-tab" type="button" data-mode="workflow"></button>
+          <button class="demo-tab" type="button" data-mode="lab"></button>
         </div>
         <div class="demo-flow" data-role="flow"></div>
         <div class="demo-actions">
@@ -279,8 +213,8 @@
 
     root.dataset.ready = "1";
 
-    const presetName = root.dataset.preset || "lecture-template";
-    const preset = PRESETS[presetName] || PRESETS["lecture-template"];
+    const presetName = root.dataset.preset || "public-key-core";
+    const preset = PRESETS[presetName] || PRESETS["public-key-core"];
     render(root, preset);
 
     const principles = root.querySelector<HTMLElement>('[data-role="principles"]');
@@ -295,9 +229,9 @@
       return;
     }
 
-    principles.innerHTML = preset.principleLines.map((line) => `<li>${line}</li>`).join("");
+    principles.innerHTML = preset.principleLines.map((line) => `<li>${escapeHtml(line)}</li>`).join("");
 
-    let mode: DemoMode = "encrypt";
+    let mode: DemoMode = "workflow";
     let currentStep = 0;
 
     const paint = (): void => {
@@ -321,9 +255,9 @@
 
           return `
             <section class="${classes}">
-              <span class="demo-step-index">步骤 ${index + 1} / ${modeConfig.steps.length} · ${step.actor}</span>
-              <strong class="demo-step-title">${step.title}</strong>
-              <p class="demo-step-copy">${step.detail}</p>
+              <span class="demo-step-index">步骤 ${index + 1} / ${modeConfig.steps.length} · ${escapeHtml(step.actor)}</span>
+              <strong class="demo-step-title">${escapeHtml(step.title)}</strong>
+              <p class="demo-step-copy">${escapeHtml(step.detail)}</p>
             </section>
           `;
         })

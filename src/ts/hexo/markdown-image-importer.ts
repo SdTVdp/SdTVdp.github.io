@@ -21,6 +21,7 @@ import {
 const IMPORT_ROOT = "uploads/imported";
 const SOURCE_IMPORT_ROOT = path.join(hexo.source_dir, IMPORT_ROOT);
 const MAX_REMOTE_IMAGE_BYTES = 20 * 1024 * 1024;
+const MAX_REMOTE_REDIRECTS = 5;
 const SEARCHABLE_IMAGE_EXTENSIONS = new Set([
   ".apng",
   ".avif",
@@ -169,7 +170,7 @@ const isUnsafeIpv6 = (hostname: string): boolean => {
 
 const assertSafeRemoteUrl = (input: string): URL => {
   const parsed = new URL(input);
-  const hostname = parsed.hostname.toLowerCase();
+  const hostname = parsed.hostname.replace(/^\[|\]$/g, "").toLowerCase();
   const ipVersion = net.isIP(hostname);
 
   if (!/^https?:$/i.test(parsed.protocol)) {
@@ -191,6 +192,34 @@ const assertSafeRemoteUrl = (input: string): URL => {
   }
 
   return parsed;
+};
+
+const fetchRemoteImage = async (initialUrl: URL): Promise<{ response: Response; finalUrl: URL }> => {
+  let currentUrl = initialUrl;
+
+  for (let redirects = 0; redirects <= MAX_REMOTE_REDIRECTS; redirects += 1) {
+    const response = await fetch(currentUrl, {
+      signal: AbortSignal.timeout(20000),
+      headers: {
+        "user-agent": "sdtvdp-hexo-image-importer",
+      },
+      redirect: "manual",
+    });
+
+    if (response.status < 300 || response.status >= 400) {
+      return { response, finalUrl: currentUrl };
+    }
+
+    const location = response.headers.get("location");
+    if (!location) {
+      throw new Error(`redirect without location: HTTP ${response.status}`);
+    }
+
+    await response.body?.cancel().catch(() => undefined);
+    currentUrl = assertSafeRemoteUrl(new URL(location, currentUrl).toString());
+  }
+
+  throw new Error(`too many redirects: more than ${MAX_REMOTE_REDIRECTS}`);
 };
 
 const readResponseBuffer = async (response: Response, maxBytes: number): Promise<Buffer> => {
@@ -367,12 +396,7 @@ const importRemoteAsset = async (url: string, context: ImportContext): Promise<s
       return existing[0];
     }
 
-    const response = await fetch(parsedUrl, {
-      signal: AbortSignal.timeout(20000),
-      headers: {
-        "user-agent": "sdtvdp-hexo-image-importer",
-      },
-    });
+    const { response, finalUrl } = await fetchRemoteImage(parsedUrl);
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
@@ -384,7 +408,7 @@ const importRemoteAsset = async (url: string, context: ImportContext): Promise<s
     }
 
     const buffer = await readResponseBuffer(response, MAX_REMOTE_IMAGE_BYTES);
-    const urlExtension = path.extname(parsedUrl.pathname || "").toLowerCase();
+    const urlExtension = path.extname(finalUrl.pathname || "").toLowerCase();
     const extension = SEARCHABLE_IMAGE_EXTENSIONS.has(urlExtension)
       ? urlExtension
       : resolveExtensionFromType(contentType);

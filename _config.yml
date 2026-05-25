@@ -47,6 +47,19 @@ marked:
   prependRoot: true
   postAsset: true
 
+image_pipeline:
+  enabled: true
+  format: webp
+  webp_quality: 82
+  avif_quality: 54
+  effort: 4
+  passthrough:
+    - .apng
+    - .avif
+    - .gif
+    - .svg
+    - .webp
+
 index_generator:
   path: blog
   per_page: 8
