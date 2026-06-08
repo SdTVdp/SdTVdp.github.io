@@ -1,4 +1,5 @@
-﻿import { toArray } from "./_shared/post-utils";
+import { derivePostClassification } from "./_shared/post-classification-rules";
+import { getTagNames, toArray } from "./_shared/post-utils";
 
 const hasAssignedCategories = (categories: HexoRenderable["categories"]): boolean => {
   if (!categories) {
@@ -8,18 +9,20 @@ const hasAssignedCategories = (categories: HexoRenderable["categories"]): boolea
   return toArray(categories).length > 0;
 };
 
-const deriveCategoriesFromSource = (source: unknown): string[] => {
-  const normalized = String(source ?? "").replace(/\\/g, "/");
-  const parts = normalized.split("/").filter(Boolean);
-  const postRootIndex = parts.indexOf("_posts");
-
-  if (postRootIndex === -1 || parts.length <= postRootIndex + 2) {
-    return [];
+const withDefaultTags = (post: HexoRenderable, defaultTags: string[]): Promise<unknown> | null => {
+  if (defaultTags.length === 0 || typeof post.setTags !== "function") {
+    return null;
   }
 
-  const scoped = parts.slice(postRootIndex + 1, -1);
-  const categoryStart = /^\d{4}$/.test(scoped[0] ?? "") ? scoped.slice(1) : scoped;
-  return categoryStart.filter(Boolean).slice(0, 3);
+  const existingTags = getTagNames(post);
+  const existingTagKeys = new Set(existingTags.map((tag) => tag.toLowerCase()));
+  const missingTags = defaultTags.filter((tag) => !existingTagKeys.has(tag.toLowerCase()));
+
+  if (missingTags.length === 0) {
+    return null;
+  }
+
+  return post.setTags([...existingTags, ...missingTags]);
 };
 
 hexo.extend.filter.register("before_generate", () => {
@@ -27,16 +30,20 @@ hexo.extend.filter.register("before_generate", () => {
 
   return Promise.all(
     posts.map((post) => {
-      if (hasAssignedCategories(post.categories) || typeof post.setCategories !== "function") {
-        return null;
+      const classification = derivePostClassification(post.source);
+      const tasks: Array<Promise<unknown> | null> = [];
+
+      if (
+        classification.categories.length > 0 &&
+        !hasAssignedCategories(post.categories) &&
+        typeof post.setCategories === "function"
+      ) {
+        tasks.push(post.setCategories(classification.categories));
       }
 
-      const categories = deriveCategoriesFromSource(post.source);
-      if (categories.length === 0) {
-        return null;
-      }
+      tasks.push(withDefaultTags(post, classification.tags));
 
-      return post.setCategories(categories);
+      return Promise.all(tasks.filter(Boolean));
     })
   );
 });

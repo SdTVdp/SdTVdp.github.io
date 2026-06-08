@@ -11,6 +11,8 @@
     "compile:hexo": "tsc -p tsconfig.hexo.json",
     "compile:client": "tsc -p tsconfig.client.json",
     "compile": "npm run compile:hexo && npm run compile:client",
+    "test:blog-helpers": "npm run compile:hexo && node tools/test-blog-pipeline-helpers.js",
+    "verify:blog": "node tools/verify-blog-pipeline.js",
     "build": "npm run typecheck && npm run compile && hexo clean && hexo generate",
     "server": "npm run compile && hexo clean && node tools/run-hexo-server.js",
     "algolia:index": "node tools/run-algolia-index.js",

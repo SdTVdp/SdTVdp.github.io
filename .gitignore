@@ -6,3 +6,7 @@ db.json
 dist/
 tmp-*.log
 *.log
+source/uploads/imported/**/*-480.webp
+source/uploads/imported/**/*-768.webp
+source/uploads/imported/**/*-1200.webp
+source/uploads/imported/**/*-1600.webp
