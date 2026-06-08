@@ -5,7 +5,16 @@ import { optimizeSitePath } from "./_shared/image-pipeline";
 const defaultPostPermalinkFilter = require("hexo/dist/plugins/filter/post_permalink") as (
   data: HexoRenderable
 ) => string;
-import { getStickyValue, getTagNames, htmlToText, sortPosts, toArray } from "./_shared/post-utils";
+import {
+  extractCodeText,
+  extractFormulaText,
+  getCategoryNames,
+  getStickyValue,
+  getTagNames,
+  htmlToText,
+  sortPosts,
+  toArray,
+} from "./_shared/post-utils";
 
 const asRenderableList = (name: "posts" | "pages"): HexoRenderable[] =>
   toArray(hexo.locals.get<HexoCollection<HexoRenderable>>(name));
@@ -50,17 +59,31 @@ const normalizePagedPosts = (value: unknown): HexoCollection<HexoRenderable> | u
   return Object.assign(normalized.slice(), { data: normalized });
 };
 
-const syncExcerptToDescription = (entry: HexoRenderable): boolean => {
-  const excerpt = htmlToText(entry.excerpt);
+const truncateText = (value: string, limit: number): string => {
+  if (value.length <= limit) {
+    return value;
+  }
 
-  if (!excerpt || htmlToText(entry.description)) {
+  return value.slice(0, limit).trim();
+};
+
+const buildDescriptionFallback = (entry: HexoRenderable, limit = 180): string => {
+  const excerpt = htmlToText(entry.excerpt);
+  const content = htmlToText(entry.content);
+  return truncateText(excerpt || content, limit);
+};
+
+const syncExcerptToDescription = (entry: HexoRenderable): boolean => {
+  const description = buildDescriptionFallback(entry);
+
+  if (!description || htmlToText(entry.description)) {
     return false;
   }
 
   if (typeof entry.set === "function") {
-    entry.set("description", excerpt);
+    entry.set("description", description);
   } else {
-    entry.description = excerpt;
+    entry.description = description;
   }
 
   if (Object.prototype.hasOwnProperty.call(entry, "postDesc")) {
@@ -335,7 +358,10 @@ hexo.extend.generator.register("search-index", (locals: HexoLocals) => {
       excerpt: htmlToText(post.excerpt || ""),
       description: htmlToText(post.description || ""),
       content: htmlToText(post.content || ""),
+      categories: getCategoryNames(post),
       tags: getTagNames(post),
+      codeText: extractCodeText(post.content),
+      formulaText: extractFormulaText(post.content),
       sticky: getStickyValue(post),
     }));
 

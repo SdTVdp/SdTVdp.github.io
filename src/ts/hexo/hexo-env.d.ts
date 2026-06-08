@@ -28,6 +28,7 @@ declare interface HexoRenderable {
   set?: (key: string, value: unknown) => void;
   save?: () => Promise<unknown>;
   setCategories?: (categories: string[]) => Promise<unknown>;
+  setTags?: (tags: string[]) => Promise<unknown>;
   [key: string]: unknown;
 }
 
@@ -38,7 +39,7 @@ declare interface HexoLocals {
     name: string;
     path: string;
     length: number;
-      posts: HexoCollection<HexoRenderable> & { sort?: (orderBy: string) => HexoRenderable[] };
+    posts: HexoCollection<HexoRenderable> & { sort?: (orderBy: string) => HexoRenderable[] };
   }>;
   [key: string]: unknown;
 }

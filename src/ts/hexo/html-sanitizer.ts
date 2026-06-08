@@ -74,7 +74,7 @@ const DROP_CONTENT_TAGS = new Set([
 const GLOBAL_ATTRS = new Set(["class", "id", "title", "lang", "dir", "role"]);
 const TAG_ATTRS: Record<string, Set<string>> = {
   a: new Set(["href", "target", "rel", "download"]),
-  img: new Set(["src", "alt", "width", "height", "loading", "decoding"]),
+  img: new Set(["src", "srcset", "sizes", "alt", "width", "height", "loading", "decoding"]),
   ol: new Set(["start", "reversed"]),
   li: new Set(["value"]),
   td: new Set(["colspan", "rowspan"]),
@@ -130,6 +130,40 @@ const sanitizePositiveInteger = (value: string): string | null => {
 const sanitizeSizeValue = (value: string): string | null => {
   const trimmed = String(value || "").trim();
   return /^\d{1,4}%?$/.test(trimmed) ? trimmed : null;
+};
+
+const sanitizeSrcset = (value: string): string | null => {
+  const trimmed = String(value || "").trim();
+  if (!trimmed || trimmed.length > 2000) {
+    return null;
+  }
+
+  const candidates = trimmed.split(",").map((candidate) => candidate.trim()).filter(Boolean);
+  const sanitized = candidates.map((candidate) => {
+    const parts = candidate.split(/\s+/).filter(Boolean);
+    if (parts.length < 1 || parts.length > 2) {
+      return null;
+    }
+
+    const safeUrl = sanitizeUrlAttribute(parts[0], "src");
+    if (!safeUrl) {
+      return null;
+    }
+
+    const descriptor = parts[1] || "";
+    if (descriptor && !/^(?:\d{1,4}w|(?:\d|\d\.\d{1,2})x)$/.test(descriptor)) {
+      return null;
+    }
+
+    return descriptor ? `${safeUrl} ${descriptor}` : safeUrl;
+  });
+
+  return sanitized.every(Boolean) ? sanitized.join(", ") : null;
+};
+
+const sanitizeSizes = (value: string): string | null => {
+  const trimmed = String(value || "").trim();
+  return trimmed.length <= 240 && /^[\w\s:(),.%+\-*/]+$/.test(trimmed) ? trimmed : null;
 };
 
 const sanitizeRel = (value: string): string | null => {
@@ -220,6 +254,20 @@ const sanitizeAttributes = (tagName: string, attribs: Record<string, string> | u
         const safe = sanitizeUrlAttribute(value, "src");
         if (safe) {
           sanitized.src = safe;
+        }
+        break;
+      }
+      case "srcset": {
+        const safe = sanitizeSrcset(value);
+        if (safe) {
+          sanitized.srcset = safe;
+        }
+        break;
+      }
+      case "sizes": {
+        const safe = sanitizeSizes(value);
+        if (safe) {
+          sanitized.sizes = safe;
         }
         break;
       }

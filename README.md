@@ -191,6 +191,8 @@ Hexo 会去找：
 - `hexo new draft "草稿"` 对应 `scaffolds/draft.md`
 - `hexo new note "搜索笔记"` 对应 `scaffolds/note.md`
 - `hexo new writeup "题解"` 对应 `scaffolds/writeup.md`
+- `hexo new research "科研日志"` 对应 `scaffolds/research.md`
+- `hexo new tech-note "技术笔记"` 对应 `scaffolds/tech-note.md`
 
 ### 这套仓库里已经准备好的 scaffold
 
@@ -199,6 +201,8 @@ Hexo 会去找：
 - `page.md`：独立页面模板
 - `note.md`：普通笔记模板
 - `writeup.md`：比赛 / 逆向 / CTF 题解模板
+- `research.md`：科研日志模板
+- `tech-note.md`：逆向 / VM / 密码学技术笔记模板
 
 ### 最常用的写法
 
@@ -212,6 +216,18 @@ CTF 题解：
 
 ```bash
 npx hexo new writeup "TGCTF 逆向记录"
+```
+
+科研日志：
+
+```bash
+npx hexo new research "Transformer 可解释性实验记录"
+```
+
+技术笔记：
+
+```bash
+npx hexo new tech-note "VM 指令调度分析"
 ```
 
 ### 如果你想直接生成到三级目录里
@@ -231,6 +247,14 @@ npx hexo new note "搜索说明" --path 2026/guides/search/local-search-notes.md
 
 ```bash
 npx hexo new writeup "蓝桥逆向" --path 2025/ctf/re/lanqiao-re.md
+```
+
+```bash
+npx hexo new research "自监督表示实验" --path research/ai/self-supervised-representation.md
+```
+
+```bash
+npx hexo new tech-note "VM Handler 分析" --path series/re-technical-notes/vm-handler-analysis.md
 ```
 
 这会直接创建：

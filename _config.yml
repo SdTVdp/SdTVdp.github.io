@@ -53,6 +53,13 @@ image_pipeline:
   webp_quality: 82
   avif_quality: 54
   effort: 4
+  responsive_widths:
+    - 480
+    - 768
+    - 1200
+    - 1600
+  sizes: "(max-width: 768px) 100vw, 768px"
+  lqip: true
   passthrough:
     - .apng
     - .avif

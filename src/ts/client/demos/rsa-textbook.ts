@@ -210,12 +210,12 @@
         <p class="demo-copy">按照实验四参数演示 RSA 密钥生成、加密和解密：p=11，q=13，e=7。</p>
         <p class="demo-note">这里故意使用小整数，目的是和作业、main.c 输出、手算过程完全对齐；它不是生产级 RSA。</p>
         <div class="demo-number-grid">
-          <label class="demo-mini-field">p <input class="demo-number-input" data-role="p" type="number" value="${DEFAULTS.p}"></label>
-          <label class="demo-mini-field">q <input class="demo-number-input" data-role="q" type="number" value="${DEFAULTS.q}"></label>
-          <label class="demo-mini-field">e <input class="demo-number-input" data-role="e" type="number" value="${DEFAULTS.e}"></label>
-          <label class="demo-mini-field">m1 <input class="demo-number-input" data-role="m1" type="number" value="${DEFAULTS.m1}"></label>
-          <label class="demo-mini-field">m2 <input class="demo-number-input" data-role="m2" type="number" value="${DEFAULTS.m2}"></label>
-          <label class="demo-mini-field">给定密文 <input class="demo-number-input" data-role="given-cipher" type="number" value="${DEFAULTS.givenCipher}"></label>
+          <label class="demo-mini-field"><span class="demo-mini-label">p</span><input class="demo-number-input" data-role="p" type="number" value="${DEFAULTS.p}"></label>
+          <label class="demo-mini-field"><span class="demo-mini-label">q</span><input class="demo-number-input" data-role="q" type="number" value="${DEFAULTS.q}"></label>
+          <label class="demo-mini-field"><span class="demo-mini-label">e</span><input class="demo-number-input" data-role="e" type="number" value="${DEFAULTS.e}"></label>
+          <label class="demo-mini-field"><span class="demo-mini-label">m1</span><input class="demo-number-input" data-role="m1" type="number" value="${DEFAULTS.m1}"></label>
+          <label class="demo-mini-field"><span class="demo-mini-label">m2</span><input class="demo-number-input" data-role="m2" type="number" value="${DEFAULTS.m2}"></label>
+          <label class="demo-mini-field"><span class="demo-mini-label">给定密文</span><input class="demo-number-input" data-role="given-cipher" type="number" value="${DEFAULTS.givenCipher}"></label>
         </div>
         <div class="demo-actions">
           <button class="demo-button" type="button" data-role="run">重新计算</button>
@@ -266,7 +266,7 @@
       ];
 
       summary.innerHTML = summaryItems
-        .map(([label, value]) => `<span class="demo-kv"><strong>${label}</strong><span>${value}</span></span>`)
+        .map(([label, value]) => `<span class="demo-kv"><strong>${label}</strong><span class="demo-kv-value">${value}</span></span>`)
         .join("");
 
       flow.innerHTML = result.steps

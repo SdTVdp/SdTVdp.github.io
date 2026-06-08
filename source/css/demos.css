@@ -281,66 +281,95 @@
   font-weight: 700;
 }
 
+#article-container .crypto-demo .demo-number-grid,
 .crypto-demo .demo-number-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(9rem, 1fr));
   gap: 0.75rem;
   margin-bottom: 0.85rem;
+  align-items: end;
 }
 
+#article-container .crypto-demo .demo-mini-field,
 .crypto-demo .demo-mini-field {
-  display: grid;
+  display: flex !important;
+  flex-direction: column !important;
   gap: 0.3rem;
+  min-width: 0;
+  margin: 0 !important;
   font-weight: 600;
+  line-height: 1.35;
 }
 
+#article-container .crypto-demo .demo-mini-label,
+.crypto-demo .demo-mini-label {
+  display: block;
+  color: var(--font-color);
+  white-space: nowrap;
+}
+
+#article-container .crypto-demo .demo-number-input,
 .crypto-demo .demo-number-input {
-  width: 100%;
+  display: block !important;
+  width: 100% !important;
+  max-width: 100%;
   min-width: 0;
   box-sizing: border-box;
   border: 1px solid var(--card-border, rgba(64, 92, 122, 0.22));
   border-radius: 8px;
+  margin: 0 !important;
   padding: 0.56rem 0.62rem;
   font: inherit;
   color: inherit;
   background: rgba(255, 255, 255, 0.86);
 }
 
+[data-theme="dark"] #article-container .crypto-demo .demo-number-input,
 [data-theme="dark"] .crypto-demo .demo-number-input {
-  background: rgba(9, 14, 20, 0.86);
+  background: rgba(9, 14, 20, 0.86) !important;
 }
 
+#article-container .crypto-demo .demo-kv-grid,
 .crypto-demo .demo-kv-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(8.5rem, 1fr));
   gap: 0.65rem;
   margin-bottom: 0.85rem;
 }
 
+#article-container .crypto-demo .demo-kv,
 .crypto-demo .demo-kv {
-  display: grid;
+  display: flex !important;
+  flex-direction: column;
   gap: 0.18rem;
   min-width: 0;
+  margin: 0 !important;
   border: 1px solid var(--card-border, rgba(64, 92, 122, 0.22));
   border-radius: 8px;
   padding: 0.62rem 0.7rem;
   background: rgba(255, 255, 255, 0.58);
 }
 
+[data-theme="dark"] #article-container .crypto-demo .demo-kv,
 [data-theme="dark"] .crypto-demo .demo-kv {
   background: rgba(9, 14, 20, 0.72);
 }
 
+#article-container .crypto-demo .demo-kv strong,
 .crypto-demo .demo-kv strong {
+  display: block;
   color: var(--meta-color, #6f7f92);
   font-size: 0.86rem;
   line-height: 1.25;
 }
 
-.crypto-demo .demo-kv span {
+#article-container .crypto-demo .demo-kv-value,
+.crypto-demo .demo-kv-value {
+  display: block;
   overflow-wrap: anywhere;
   font-family: "JetBrains Mono", "Cascadia Code", "IBM Plex Mono", Consolas, monospace;
   font-size: 0.94rem;
+  line-height: 1.45;
 }
 
 @media (max-width: 768px) {
@@ -352,6 +381,8 @@
     grid-template-columns: 1fr;
   }
 
+  #article-container .crypto-demo .demo-number-grid,
+  #article-container .crypto-demo .demo-kv-grid,
   .crypto-demo .demo-number-grid,
   .crypto-demo .demo-kv-grid {
     grid-template-columns: 1fr;

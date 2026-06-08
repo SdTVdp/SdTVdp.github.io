@@ -243,14 +243,14 @@
         <p class="demo-copy">按照实验四参数演示 ElGamal：p=509，g=449，x=12，k=18。</p>
         <p class="demo-note">ElGamal 每次加密都需要新的随机 k；这里为了复现实验结果，默认固定 k=18。</p>
         <div class="demo-number-grid">
-          <label class="demo-mini-field">p <input class="demo-number-input" data-role="p" type="number" value="${DEFAULTS.p}"></label>
-          <label class="demo-mini-field">g <input class="demo-number-input" data-role="g" type="number" value="${DEFAULTS.g}"></label>
-          <label class="demo-mini-field">x <input class="demo-number-input" data-role="x" type="number" value="${DEFAULTS.x}"></label>
-          <label class="demo-mini-field">k <input class="demo-number-input" data-role="k" type="number" value="${DEFAULTS.k}"></label>
-          <label class="demo-mini-field">m1 <input class="demo-number-input" data-role="m1" type="number" value="${DEFAULTS.m1}"></label>
-          <label class="demo-mini-field">m2 <input class="demo-number-input" data-role="m2" type="number" value="${DEFAULTS.m2}"></label>
-          <label class="demo-mini-field">给定 c1 <input class="demo-number-input" data-role="given-c1" type="number" value="${DEFAULTS.givenC1}"></label>
-          <label class="demo-mini-field">给定 c2 <input class="demo-number-input" data-role="given-c2" type="number" value="${DEFAULTS.givenC2}"></label>
+          <label class="demo-mini-field"><span class="demo-mini-label">p</span><input class="demo-number-input" data-role="p" type="number" value="${DEFAULTS.p}"></label>
+          <label class="demo-mini-field"><span class="demo-mini-label">g</span><input class="demo-number-input" data-role="g" type="number" value="${DEFAULTS.g}"></label>
+          <label class="demo-mini-field"><span class="demo-mini-label">x</span><input class="demo-number-input" data-role="x" type="number" value="${DEFAULTS.x}"></label>
+          <label class="demo-mini-field"><span class="demo-mini-label">k</span><input class="demo-number-input" data-role="k" type="number" value="${DEFAULTS.k}"></label>
+          <label class="demo-mini-field"><span class="demo-mini-label">m1</span><input class="demo-number-input" data-role="m1" type="number" value="${DEFAULTS.m1}"></label>
+          <label class="demo-mini-field"><span class="demo-mini-label">m2</span><input class="demo-number-input" data-role="m2" type="number" value="${DEFAULTS.m2}"></label>
+          <label class="demo-mini-field"><span class="demo-mini-label">给定 c1</span><input class="demo-number-input" data-role="given-c1" type="number" value="${DEFAULTS.givenC1}"></label>
+          <label class="demo-mini-field"><span class="demo-mini-label">给定 c2</span><input class="demo-number-input" data-role="given-c2" type="number" value="${DEFAULTS.givenC2}"></label>
         </div>
         <div class="demo-actions">
           <button class="demo-button" type="button" data-role="run">重新计算</button>
@@ -301,7 +301,7 @@
       ];
 
       summary.innerHTML = summaryItems
-        .map(([label, value]) => `<span class="demo-kv"><strong>${label}</strong><span>${value}</span></span>`)
+        .map(([label, value]) => `<span class="demo-kv"><strong>${label}</strong><span class="demo-kv-value">${value}</span></span>`)
         .join("");
 
       flow.innerHTML = result.steps
