@@ -34,8 +34,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Test blog helpers
+        run: npm run test:blog-helpers
+
       - name: Build site
         run: npm run build
+
+      - name: Verify blog pipeline
+        run: npm run verify:blog
 
       - name: Add .nojekyll marker
         run: touch public/.nojekyll

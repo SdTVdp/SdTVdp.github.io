@@ -4,6 +4,7 @@ import fs from "node:fs/promises";
 import net from "node:net";
 import path from "node:path";
 import {
+  buildResponsiveImageMetadata,
   ensureDir,
   getWorkspaceRoot,
   isDataUrl,
@@ -11,11 +12,10 @@ import {
   isSiteAbsolute,
   isWithinDirectory,
   normalizeSlashes,
-  optimizeImageAtPath,
-  optimizeSitePath,
+  type ResponsiveImageMetadata,
   stripLeadingSlashes,
   stripQueryAndHash,
-  toSitePath,
+  toSourceAbsoluteFromSitePath,
 } from "./_shared/image-pipeline";
 
 const IMPORT_ROOT = "uploads/imported";
@@ -97,6 +97,50 @@ const splitMarkdownDestination = (rawTarget: string): { url: string; suffix: str
     suffix: titleMatch[2] ? ` ${titleMatch[2].trim()}` : "",
   };
 };
+
+const parseMarkdownTitle = (suffix: string): string => {
+  const match = suffix.trim().match(/^(["'])(.*?)\1$/);
+  return match ? match[2] : "";
+};
+
+const escapeHtmlAttribute = (value: unknown): string =>
+  String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+const toSimpleImageMetadata = (src: string): ResponsiveImageMetadata => ({ src });
+
+const buildImageAttributes = (
+  image: ResponsiveImageMetadata,
+  options: { alt?: string; title?: string; includeSrc?: boolean } = {}
+): string => {
+  const includeSrc = options.includeSrc !== false;
+  const attributes: Array<[string, string | number | undefined]> = [
+    includeSrc ? ["src", image.src] : ["src", undefined],
+    ["alt", options.alt],
+    ["title", options.title],
+    ["srcset", image.srcset],
+    ["sizes", image.sizes],
+    ["data-lqip", image.lqip],
+    ["width", image.width],
+    ["height", image.height],
+    ["loading", "lazy"],
+    ["decoding", "async"],
+  ];
+
+  return attributes
+    .filter(([, value]) => value !== undefined && value !== "")
+    .map(([name, value]) => ` ${name}="${escapeHtmlAttribute(value)}"`)
+    .join("");
+};
+
+const renderImageTag = (image: ResponsiveImageMetadata, alt = "", title = ""): string =>
+  `<img${buildImageAttributes(image, { alt, title })}>`;
+
+const stripGeneratedImageAttributes = (attributes: string): string =>
+  attributes.replace(/\s(?:srcset|sizes|data-lqip|width|height|loading|decoding)=(["']).*?\1/gi, "");
 
 const decodePathLike = (value: unknown): string => {
   const normalized = String(value ?? "").trim().replace(/&amp;/g, "&");
@@ -460,38 +504,46 @@ const toContext = (data: HexoRenderable): ImportContext => {
   };
 };
 
-const importImageTarget = async (rawTarget: string, context: ImportContext): Promise<string> => {
+const importImageTarget = async (rawTarget: string, context: ImportContext): Promise<ResponsiveImageMetadata> => {
   const target = normalizeTarget(rawTarget);
 
   if (!target || isDataUrl(target)) {
-    return target;
+    return toSimpleImageMetadata(target);
   }
 
   if (isSiteAbsolute(target)) {
-    return optimizeSitePath(target);
+    const absolutePath = toSourceAbsoluteFromSitePath(target);
+    if (!absolutePath) {
+      return toSimpleImageMetadata(target);
+    }
+
+    try {
+      const stats = await fs.stat(absolutePath);
+      return stats.isFile() ? buildResponsiveImageMetadata(absolutePath) : toSimpleImageMetadata(target);
+    } catch {
+      return toSimpleImageMetadata(target);
+    }
   }
 
   if (isRemoteUrl(target)) {
     try {
       const absoluteAssetPath = await importRemoteAsset(target, context);
-      const optimizedAssetPath = await optimizeImageAtPath(absoluteAssetPath);
-      return toSitePath(optimizedAssetPath);
+      return buildResponsiveImageMetadata(absoluteAssetPath);
     } catch (error) {
       hexo.log.warn(
         `[markdown-image-importer] 下载远程图片失败: ${target} (${error instanceof Error ? error.message : String(error)})`
       );
-      return target;
+      return toSimpleImageMetadata(target);
     }
   }
 
   const localSource = await resolveLocalImageSource(target, context);
   if (!localSource) {
-    return target;
+    return toSimpleImageMetadata(target);
   }
 
   const absoluteAssetPath = await importLocalAsset(localSource, context);
-  const optimizedAssetPath = await optimizeImageAtPath(absoluteAssetPath);
-  return toSitePath(optimizedAssetPath);
+  return buildResponsiveImageMetadata(absoluteAssetPath);
 };
 
 const replaceAsync = async (
@@ -522,21 +574,26 @@ const rewriteObsidianImages = (content: string, context: ImportContext): Promise
   replaceAsync(content, /!\[\[([^\]]+)\]\]/g, async (match) => {
     const rawToken = match[1].split("|")[0].trim();
     const imported = await importImageTarget(rawToken, context);
-    return `![](${imported})`;
+    return renderImageTag(imported);
   });
 
 const rewriteMarkdownImages = (content: string, context: ImportContext): Promise<string> =>
   replaceAsync(content, /!\[([^\]]*)\]\(([^)\n]+)\)/g, async (match) => {
     const parsed = splitMarkdownDestination(match[2]);
     const imported = await importImageTarget(parsed.url, context);
+    const title = parseMarkdownTitle(parsed.suffix);
 
-    return `![${match[1]}](${imported}${parsed.suffix})`;
+    return renderImageTag(imported, match[1], title);
   });
 
 const rewriteHtmlImages = (content: string, context: ImportContext): Promise<string> =>
   replaceAsync(content, /<img\b([^>]*?)\bsrc=(["'])(.+?)\2([^>]*)>/gi, async (match) => {
     const imported = await importImageTarget(match[3], context);
-    return `<img${match[1]}src=${match[2]}${imported}${match[2]}${match[4]}>`;
+    const before = stripGeneratedImageAttributes(match[1]);
+    const after = stripGeneratedImageAttributes(match[4]);
+    const generated = buildImageAttributes(imported, { includeSrc: false });
+
+    return `<img${before}src=${match[2]}${escapeHtmlAttribute(imported.src)}${match[2]}${after}${generated}>`;
   });
 
 hexo.extend.filter.register("after_init", () => {

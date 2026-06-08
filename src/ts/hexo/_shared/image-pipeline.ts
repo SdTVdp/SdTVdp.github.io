@@ -4,16 +4,30 @@ import sharp from "sharp";
 
 export type OptimizedImageFormat = "webp" | "avif";
 
+export interface ResponsiveImageMetadata {
+  src: string;
+  srcset?: string;
+  sizes?: string;
+  lqip?: string;
+  width?: number;
+  height?: number;
+}
+
 interface ImagePipelineConfig {
   enabled: boolean;
   format: OptimizedImageFormat;
   quality: number;
   effort: number;
   passthrough: Set<string>;
+  responsiveWidths: number[];
+  sizes: string;
+  lqip: boolean;
 }
 
 const CONVERTIBLE_EXTENSIONS = new Set([".bmp", ".jpeg", ".jpg", ".png", ".tif", ".tiff"]);
+const RESPONSIVE_SOURCE_EXTENSIONS = new Set([...CONVERTIBLE_EXTENSIONS, ".avif", ".webp"]);
 const DEFAULT_PASSTHROUGH = [".apng", ".avif", ".gif", ".svg", ".webp"];
+const DEFAULT_RESPONSIVE_WIDTHS = [480, 768, 1200, 1600];
 
 const getHexoContext = (): HexoContext => {
   const context = globalThis.__sdtvdpHexoContext;
@@ -52,6 +66,15 @@ const maybeStat = async (target: string): Promise<Awaited<ReturnType<typeof fs.s
   }
 };
 
+const normalizeResponsiveWidths = (widths: unknown): number[] => {
+  const configured = Array.isArray(widths) ? widths : DEFAULT_RESPONSIVE_WIDTHS;
+  const normalized = configured
+    .map((width) => Number(width))
+    .filter((width) => Number.isInteger(width) && width >= 160 && width <= 3200);
+
+  return Array.from(new Set(normalized)).sort((left, right) => left - right);
+};
+
 const getConfig = (): ImagePipelineConfig => {
   const context = getHexoContext();
   const config = (context.config.image_pipeline ?? {}) as Partial<{
@@ -61,6 +84,9 @@ const getConfig = (): ImagePipelineConfig => {
     avif_quality: number;
     effort: number;
     passthrough: string[];
+    responsive_widths: number[];
+    sizes: string;
+    lqip: boolean;
   }>;
 
   const format = config.format === "avif" ? "avif" : "webp";
@@ -77,12 +103,23 @@ const getConfig = (): ImagePipelineConfig => {
         : fallbackQuality,
     effort: typeof config.effort === "number" && Number.isFinite(config.effort) ? config.effort : 4,
     passthrough: new Set(normalizedPassthrough.map((extension) => extension.toLowerCase())),
+    responsiveWidths: normalizeResponsiveWidths(config.responsive_widths),
+    sizes:
+      typeof config.sizes === "string" && config.sizes.trim()
+        ? config.sizes.trim()
+        : "(max-width: 768px) 100vw, 768px",
+    lqip: config.lqip !== false,
   };
 };
 
 const buildOutputPath = (absolutePath: string, format: OptimizedImageFormat): string => {
   const parsed = path.parse(absolutePath);
   return path.join(parsed.dir, `${parsed.name}.${format}`);
+};
+
+const buildResponsiveOutputPath = (absolutePath: string, width: number, format: OptimizedImageFormat): string => {
+  const parsed = path.parse(absolutePath);
+  return path.join(parsed.dir, `${parsed.name}-${width}.${format}`);
 };
 
 export const toSitePath = (absolutePath: string): string => {
@@ -129,6 +166,108 @@ export const optimizeImageAtPath = async (absolutePath: string): Promise<string>
   }
 
   return outputPath;
+};
+
+const writeResponsiveVariant = async (
+  sourcePath: string,
+  outputPath: string,
+  width: number,
+  config: ImagePipelineConfig
+): Promise<string> => {
+  const [sourceStats, outputStats] = await Promise.all([maybeStat(sourcePath), maybeStat(outputPath)]);
+
+  if (!sourceStats?.isFile()) {
+    return sourcePath;
+  }
+
+  if (outputStats && outputStats.mtimeMs >= sourceStats.mtimeMs && outputStats.size > 0) {
+    return outputPath;
+  }
+
+  await ensureDir(path.dirname(outputPath));
+
+  const pipeline = sharp(sourcePath, { failOn: "none" }).rotate().resize({
+    width,
+    withoutEnlargement: true,
+  });
+
+  if (config.format === "avif") {
+    await pipeline.avif({ quality: config.quality, effort: config.effort }).toFile(outputPath);
+  } else {
+    await pipeline.webp({ quality: config.quality, effort: Math.min(config.effort, 6) }).toFile(outputPath);
+  }
+
+  return outputPath;
+};
+
+const buildLqip = async (absolutePath: string): Promise<string | undefined> => {
+  try {
+    const buffer = await sharp(absolutePath, { failOn: "none" })
+      .rotate()
+      .resize({ width: 32, withoutEnlargement: true })
+      .webp({ quality: 32, effort: 2 })
+      .toBuffer();
+
+    return `data:image/webp;base64,${buffer.toString("base64")}`;
+  } catch {
+    return undefined;
+  }
+};
+
+export const buildResponsiveImageMetadata = async (absolutePath: string): Promise<ResponsiveImageMetadata> => {
+  const config = getConfig();
+  const optimizedPath = await optimizeImageAtPath(absolutePath);
+  const result: ResponsiveImageMetadata = {
+    src: toSitePath(optimizedPath),
+  };
+
+  const extension = path.extname(absolutePath).toLowerCase();
+  if (!config.enabled || !RESPONSIVE_SOURCE_EXTENSIONS.has(extension)) {
+    return result;
+  }
+
+  const imageMetadata = await sharp(absolutePath, { failOn: "none" })
+    .metadata()
+    .catch(() => null);
+
+  const sourceWidth = imageMetadata?.width;
+  if (!sourceWidth) {
+    return result;
+  }
+
+  result.width = sourceWidth;
+  if (imageMetadata?.height) {
+    result.height = imageMetadata.height;
+  }
+
+  const variantWidths = config.responsiveWidths.filter((width) => width < sourceWidth);
+  const variantPaths = await Promise.all(
+    variantWidths.map(async (width) => ({
+      width,
+      path: await writeResponsiveVariant(
+        absolutePath,
+        buildResponsiveOutputPath(optimizedPath, width, config.format),
+        width,
+        config
+      ),
+    }))
+  );
+
+  const srcset = [
+    ...variantPaths.map((variant) => `${toSitePath(variant.path)} ${variant.width}w`),
+    `${toSitePath(optimizedPath)} ${sourceWidth}w`,
+  ];
+
+  if (srcset.length > 1) {
+    result.srcset = srcset.join(", ");
+    result.sizes = config.sizes;
+  }
+
+  if (config.lqip) {
+    result.lqip = await buildLqip(absolutePath);
+  }
+
+  return result;
 };
 
 export const optimizeSitePath = async (sitePath: string): Promise<string> => {
