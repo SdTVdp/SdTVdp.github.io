@@ -2,7 +2,8 @@
 title: 自我介绍
 date: 2026-04-05 10:30:00
 description: 这里专门用于放更完整的个人简介、兴趣方向和联系方式。
-top_img: /uploads/backgrounds/background2.gif
+top_img: /uploads/backgrounds/background2-poster.jpg
+top_video: /uploads/backgrounds/background2.optimized.mp4
 aside: false
 comments: false
 toc: true

@@ -12,6 +12,7 @@
     "compile:client": "tsc -p tsconfig.client.json",
     "compile": "npm run compile:hexo && npm run compile:client",
     "test:blog-helpers": "npm run compile:hexo && node tools/test-blog-pipeline-helpers.js",
+    "test:video-header": "node tools/test-video-header.js",
     "verify:blog": "node tools/verify-blog-pipeline.js",
     "build": "npm run typecheck && npm run compile && hexo clean && hexo generate",
     "server": "npm run compile && hexo clean && node tools/run-hexo-server.js",

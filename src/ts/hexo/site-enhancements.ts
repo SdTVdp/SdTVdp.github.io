@@ -211,6 +211,9 @@ const buildCustomAssetVersion = (): string => {
 };
 
 const CUSTOM_ASSET_VERSION = buildCustomAssetVersion();
+const VIDEO_TOP_IMAGE_NAME = "background2-poster";
+const VIDEO_TOP_VIDEO = "/uploads/backgrounds/background2.optimized.mp4";
+const HEADER_TAG_PATTERN = /<header\b([^>]*)>/g;
 
 const withVersionedCustomAssets = (html: string): string =>
   html
@@ -220,6 +223,57 @@ const withVersionedCustomAssets = (html: string): string =>
     .replace(/src=(["'])\/js\/custom\.js(?:\?[^"'<>]*)?\1/g, (_match, quote: string) => {
       return `src=${quote}/js/custom.js?v=${CUSTOM_ASSET_VERSION}${quote}`;
     });
+
+const addClassToAttributes = (attributes: string, className: string): string => {
+  const classMatch = attributes.match(/\bclass=(["'])(.*?)\1/);
+  if (!classMatch) {
+    return ` class="${className}"${attributes}`;
+  }
+
+  const [, quote, existingClasses] = classMatch;
+  const classes = existingClasses.split(/\s+/).filter(Boolean);
+  if (classes.includes(className)) {
+    return attributes;
+  }
+
+  return attributes.replace(classMatch[0], `class=${quote}${[...classes, className].join(" ")}${quote}`);
+};
+
+const getVideoPosterFromHeaderAttributes = (attributes: string): string | null => {
+  const posterMatch = attributes.match(/background-image:\s*url\((["']?)([^"')]+)\1\)/);
+  const poster = posterMatch?.[2];
+
+  return poster && poster.includes(VIDEO_TOP_IMAGE_NAME) ? poster : null;
+};
+
+const withVideoTopImages = (html: string): string => {
+  if (!html.includes(VIDEO_TOP_IMAGE_NAME) || !html.includes('id="page-header"')) {
+    return html;
+  }
+
+  return html.replace(HEADER_TAG_PATTERN, (match: string, attributes: string, offset: number) => {
+    if (!attributes.includes('id="page-header"')) {
+      return match;
+    }
+
+    const poster = getVideoPosterFromHeaderAttributes(attributes);
+    if (!poster) {
+      return match;
+    }
+
+    const afterHeader = html.slice(offset + match.length, offset + match.length + 180);
+    if (afterHeader.includes("page-header-video")) {
+      return match;
+    }
+
+    const headerAttributes = addClassToAttributes(attributes, "has-video-top-img");
+    const videoMarkup =
+      `<video class="page-header-video" autoplay muted loop playsinline preload="metadata" ` +
+      `poster="${poster}" aria-hidden="true"><source src="${VIDEO_TOP_VIDEO}" type="video/mp4"></video>`;
+
+    return `<header${headerAttributes}>${videoMarkup}`;
+  });
+};
 
 const optimizeThemeImages = async (): Promise<void> => {
   const themeConfig = hexo.theme.config;
@@ -327,7 +381,7 @@ hexo.extend.filter.register("template_locals", (locals: Record<string, unknown>)
   return locals;
 });
 
-hexo.extend.filter.register("after_render:html", (html: string) => withVersionedCustomAssets(html));
+hexo.extend.filter.register("after_render:html", (html: string) => withVersionedCustomAssets(withVideoTopImages(html)));
 
 hexo.extend.helper.register("postDesc", (entry: HexoRenderable) => {
   const result = buildPostDescription(entry);
